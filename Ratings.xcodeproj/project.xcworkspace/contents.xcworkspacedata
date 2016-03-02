@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:../Ratings/MeetCell.swift">
+   </FileRef>
+   <FileRef
       location = "self:Ratings.xcodeproj">
    </FileRef>
 </Workspace>

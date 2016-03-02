@@ -7,12 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7D4DD437ED639C2CF62222F7 /* Pods_Ratings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A41D03186A52D646C153E89F /* Pods_Ratings.framework */; };
+		A603113A1C697B0D00ECDC1E /* ChatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60311391C697B0D00ECDC1E /* ChatsViewController.swift */; };
+		A603113C1C697B8D00ECDC1E /* ThreadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A603113B1C697B8D00ECDC1E /* ThreadItem.swift */; };
+		A603113E1C697D6F00ECDC1E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A603113D1C697D6F00ECDC1E /* User.swift */; };
+		A60311421C6BE59C00ECDC1E /* DummyMeetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60311411C6BE59C00ECDC1E /* DummyMeetViewController.swift */; };
+		A60311441C6BEFC300ECDC1E /* PeopleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60311431C6BEFC300ECDC1E /* PeopleViewController.swift */; };
+		A60311481C6C1B4100ECDC1E /* PersonViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60311471C6C1B4100ECDC1E /* PersonViewController.swift */; };
 		A62B97121C590B8800081ED9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62B97111C590B8800081ED9 /* AppDelegate.swift */; };
-		A62B97141C590B8800081ED9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62B97131C590B8800081ED9 /* ViewController.swift */; };
 		A62B97171C590B8800081ED9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A62B97151C590B8800081ED9 /* Main.storyboard */; };
 		A62B97191C590B8800081ED9 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A62B97181C590B8800081ED9 /* Images.xcassets */; };
 		A62B971C1C590B8800081ED9 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = A62B971A1C590B8800081ED9 /* LaunchScreen.xib */; };
 		A62B97281C590B8800081ED9 /* RatingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62B97271C590B8800081ED9 /* RatingsTests.swift */; };
+		A62B97321C591CFB00081ED9 /* MeetsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62B97311C591CFB00081ED9 /* MeetsViewController.swift */; };
+		A6348FD31C76BA2100447525 /* MeetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6348FD21C76BA2100447525 /* MeetController.swift */; };
+		A63C267F1C7CB6CF00C87C72 /* YourMeetsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63C267E1C7CB6CF00C87C72 /* YourMeetsViewController.swift */; };
+		A64850131C7CE55F001C668E /* MeetSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64850121C7CE55F001C668E /* MeetSettingsController.swift */; };
+		A691109B1C617F65004F3D97 /* Meet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A691109A1C617F65004F3D97 /* Meet.swift */; };
+		A691109D1C62A9C8004F3D97 /* MeetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A691109C1C62A9C8004F3D97 /* MeetViewController.swift */; };
+		A691109F1C62E5DB004F3D97 /* MeetNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A691109E1C62E5DB004F3D97 /* MeetNavigationController.swift */; };
+		A69110A11C64F382004F3D97 /* MeetThreadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69110A01C64F382004F3D97 /* MeetThreadViewController.swift */; };
+		A6CC68101C6010AE004DE1C2 /* CreateMeetTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CC680F1C6010AE004DE1C2 /* CreateMeetTableViewController.swift */; };
+		A6CC68141C605277004DE1C2 /* LocationSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CC68131C605277004DE1C2 /* LocationSelectionViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,16 +42,34 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4F8D12DDC6B914D4272EBD20 /* Pods-Ratings.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ratings.release.xcconfig"; path = "Pods/Target Support Files/Pods-Ratings/Pods-Ratings.release.xcconfig"; sourceTree = "<group>"; };
+		A41D03186A52D646C153E89F /* Pods_Ratings.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Ratings.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A60311391C697B0D00ECDC1E /* ChatsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatsViewController.swift; sourceTree = "<group>"; };
+		A603113B1C697B8D00ECDC1E /* ThreadItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreadItem.swift; sourceTree = "<group>"; };
+		A603113D1C697D6F00ECDC1E /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		A60311411C6BE59C00ECDC1E /* DummyMeetViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DummyMeetViewController.swift; sourceTree = "<group>"; };
+		A60311431C6BEFC300ECDC1E /* PeopleViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeopleViewController.swift; sourceTree = "<group>"; };
+		A60311471C6C1B4100ECDC1E /* PersonViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersonViewController.swift; sourceTree = "<group>"; };
 		A62B970C1C590B8800081ED9 /* Ratings.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ratings.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A62B97101C590B8800081ED9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A62B97111C590B8800081ED9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		A62B97131C590B8800081ED9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		A62B97161C590B8800081ED9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		A62B97181C590B8800081ED9 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		A62B971B1C590B8800081ED9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		A62B97211C590B8800081ED9 /* RatingsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RatingsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A62B97261C590B8800081ED9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A62B97271C590B8800081ED9 /* RatingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingsTests.swift; sourceTree = "<group>"; };
+		A62B97311C591CFB00081ED9 /* MeetsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetsViewController.swift; sourceTree = "<group>"; };
+		A6348FD21C76BA2100447525 /* MeetController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetController.swift; sourceTree = "<group>"; };
+		A63C267E1C7CB6CF00C87C72 /* YourMeetsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YourMeetsViewController.swift; sourceTree = "<group>"; };
+		A64850121C7CE55F001C668E /* MeetSettingsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetSettingsController.swift; sourceTree = "<group>"; };
+		A691109A1C617F65004F3D97 /* Meet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Meet.swift; sourceTree = "<group>"; };
+		A691109C1C62A9C8004F3D97 /* MeetViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetViewController.swift; sourceTree = "<group>"; };
+		A691109E1C62E5DB004F3D97 /* MeetNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetNavigationController.swift; sourceTree = "<group>"; };
+		A69110A01C64F382004F3D97 /* MeetThreadViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetThreadViewController.swift; sourceTree = "<group>"; };
+		A6CC680F1C6010AE004DE1C2 /* CreateMeetTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateMeetTableViewController.swift; sourceTree = "<group>"; };
+		A6CC68131C605277004DE1C2 /* LocationSelectionViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationSelectionViewController.swift; sourceTree = "<group>"; };
+		AFD93F1AEEE0252D5415360A /* Pods-Ratings.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ratings.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Ratings/Pods-Ratings.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +77,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D4DD437ED639C2CF62222F7 /* Pods_Ratings.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,12 +91,32 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		331C0121D2235016A57DE843 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A41D03186A52D646C153E89F /* Pods_Ratings.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		693BC6BE7992080A391C16FD /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				AFD93F1AEEE0252D5415360A /* Pods-Ratings.debug.xcconfig */,
+				4F8D12DDC6B914D4272EBD20 /* Pods-Ratings.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 		A62B97031C590B8800081ED9 = {
 			isa = PBXGroup;
 			children = (
+				A6CC680F1C6010AE004DE1C2 /* CreateMeetTableViewController.swift */,
 				A62B970E1C590B8800081ED9 /* Ratings */,
 				A62B97241C590B8800081ED9 /* RatingsTests */,
 				A62B970D1C590B8800081ED9 /* Products */,
+				693BC6BE7992080A391C16FD /* Pods */,
+				331C0121D2235016A57DE843 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -78,11 +133,25 @@
 			isa = PBXGroup;
 			children = (
 				A62B97111C590B8800081ED9 /* AppDelegate.swift */,
-				A62B97131C590B8800081ED9 /* ViewController.swift */,
 				A62B97151C590B8800081ED9 /* Main.storyboard */,
 				A62B97181C590B8800081ED9 /* Images.xcassets */,
 				A62B971A1C590B8800081ED9 /* LaunchScreen.xib */,
 				A62B970F1C590B8800081ED9 /* Supporting Files */,
+				A62B97311C591CFB00081ED9 /* MeetsViewController.swift */,
+				A6CC68131C605277004DE1C2 /* LocationSelectionViewController.swift */,
+				A691109A1C617F65004F3D97 /* Meet.swift */,
+				A691109C1C62A9C8004F3D97 /* MeetViewController.swift */,
+				A691109E1C62E5DB004F3D97 /* MeetNavigationController.swift */,
+				A69110A01C64F382004F3D97 /* MeetThreadViewController.swift */,
+				A60311391C697B0D00ECDC1E /* ChatsViewController.swift */,
+				A603113B1C697B8D00ECDC1E /* ThreadItem.swift */,
+				A603113D1C697D6F00ECDC1E /* User.swift */,
+				A60311411C6BE59C00ECDC1E /* DummyMeetViewController.swift */,
+				A60311431C6BEFC300ECDC1E /* PeopleViewController.swift */,
+				A60311471C6C1B4100ECDC1E /* PersonViewController.swift */,
+				A6348FD21C76BA2100447525 /* MeetController.swift */,
+				A63C267E1C7CB6CF00C87C72 /* YourMeetsViewController.swift */,
+				A64850121C7CE55F001C668E /* MeetSettingsController.swift */,
 			);
 			path = Ratings;
 			sourceTree = "<group>";
@@ -119,9 +188,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A62B972B1C590B8800081ED9 /* Build configuration list for PBXNativeTarget "Ratings" */;
 			buildPhases = (
+				F527E650873CEF7EDAB425A2 /* Check Pods Manifest.lock */,
 				A62B97081C590B8800081ED9 /* Sources */,
 				A62B97091C590B8800081ED9 /* Frameworks */,
 				A62B970A1C590B8800081ED9 /* Resources */,
+				FB965D72F1FC33608DDEF50E /* Embed Pods Frameworks */,
+				B8CD7EC98C029E85D970EE46 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -156,6 +228,8 @@
 		A62B97041C590B8800081ED9 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftMigration = 0720;
+				LastSwiftUpdateCheck = 0720;
 				LastUpgradeCheck = 0640;
 				ORGANIZATIONNAME = Poop;
 				TargetAttributes = {
@@ -207,13 +281,76 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		B8CD7EC98C029E85D970EE46 /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Ratings/Pods-Ratings-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F527E650873CEF7EDAB425A2 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		FB965D72F1FC33608DDEF50E /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Ratings/Pods-Ratings-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A62B97081C590B8800081ED9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A62B97141C590B8800081ED9 /* ViewController.swift in Sources */,
+				A64850131C7CE55F001C668E /* MeetSettingsController.swift in Sources */,
+				A691109B1C617F65004F3D97 /* Meet.swift in Sources */,
+				A691109D1C62A9C8004F3D97 /* MeetViewController.swift in Sources */,
 				A62B97121C590B8800081ED9 /* AppDelegate.swift in Sources */,
+				A69110A11C64F382004F3D97 /* MeetThreadViewController.swift in Sources */,
+				A63C267F1C7CB6CF00C87C72 /* YourMeetsViewController.swift in Sources */,
+				A603113C1C697B8D00ECDC1E /* ThreadItem.swift in Sources */,
+				A6CC68101C6010AE004DE1C2 /* CreateMeetTableViewController.swift in Sources */,
+				A60311441C6BEFC300ECDC1E /* PeopleViewController.swift in Sources */,
+				A60311421C6BE59C00ECDC1E /* DummyMeetViewController.swift in Sources */,
+				A62B97321C591CFB00081ED9 /* MeetsViewController.swift in Sources */,
+				A6348FD31C76BA2100447525 /* MeetController.swift in Sources */,
+				A6CC68141C605277004DE1C2 /* LocationSelectionViewController.swift in Sources */,
+				A603113A1C697B0D00ECDC1E /* ChatsViewController.swift in Sources */,
+				A691109F1C62E5DB004F3D97 /* MeetNavigationController.swift in Sources */,
+				A603113E1C697D6F00ECDC1E /* User.swift in Sources */,
+				A60311481C6C1B4100ECDC1E /* PersonViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,21 +475,27 @@
 		};
 		A62B972C1C590B8800081ED9 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AFD93F1AEEE0252D5415360A /* Pods-Ratings.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = Ratings/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 			};
 			name = Debug;
 		};
 		A62B972D1C590B8800081ED9 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4F8D12DDC6B914D4272EBD20 /* Pods-Ratings.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = Ratings/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 			};
 			name = Release;
 		};
@@ -409,6 +552,7 @@
 				A62B972D1C590B8800081ED9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A62B972E1C590B8800081ED9 /* Build configuration list for PBXNativeTarget "RatingsTests" */ = {
 			isa = XCConfigurationList;
@@ -417,6 +561,7 @@
 				A62B97301C590B8800081ED9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

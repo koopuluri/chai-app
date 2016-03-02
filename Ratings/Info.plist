@@ -30,11 +30,11 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Can we use your location to let you choose your Meet&apos;s location?</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>
