@@ -72,7 +72,7 @@ class LocationSelectionViewController: UIViewController, CLLocationManagerDelega
             // setting the newMEet var for MeetViewController (the first view controller in the MeetNav stack:
             let meetController = meetNavController.viewControllers.first as! MeetController
             meetController.meet = newMeet
-            meetController.isCurrentUserMember = true
+            meetController.isCurrentUserAttendee = true
             meetController.from = "All Meets"
             
         }

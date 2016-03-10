@@ -152,13 +152,13 @@ class YourMeetsViewController: UITableViewController {
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if let meetNavController = segue.destinationViewController as? MeetNavigationController {
             
-            if let index = self.tableView.indexPathForSelectedRow?.row {
-                let meet = meetsData[index]
+            if let indexPath = self.tableView.indexPathForSelectedRow {
+                let meet = data[indexPath.section][indexPath.row]
                 
                 // setting the newMEet var for MeetViewController (the first view controller in the MeetNav stack:
                 let meetController = meetNavController.viewControllers.first as! MeetController
                 meetController.meet = meet
-                meetController.isCurrentUserMember = true
+                meetController.isCurrentUserAttendee = true
                 meetController.from = "Your Meets"
                 print("meetController meet set coming from MeetsController.prototypeCell")
             }

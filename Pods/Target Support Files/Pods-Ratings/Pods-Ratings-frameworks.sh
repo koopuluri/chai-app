@@ -84,10 +84,12 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
+  install_framework "Pods-Ratings/Alamofire.framework"
   install_framework "Pods-Ratings/JSQMessagesViewController.framework"
   install_framework "Pods-Ratings/JSQSystemSoundPlayer.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
+  install_framework "Pods-Ratings/Alamofire.framework"
   install_framework "Pods-Ratings/JSQMessagesViewController.framework"
   install_framework "Pods-Ratings/JSQSystemSoundPlayer.framework"
 fi

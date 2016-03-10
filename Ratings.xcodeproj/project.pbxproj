@@ -23,6 +23,7 @@
 		A6348FD31C76BA2100447525 /* MeetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6348FD21C76BA2100447525 /* MeetController.swift */; };
 		A63C267F1C7CB6CF00C87C72 /* YourMeetsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63C267E1C7CB6CF00C87C72 /* YourMeetsViewController.swift */; };
 		A64850131C7CE55F001C668E /* MeetSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64850121C7CE55F001C668E /* MeetSettingsController.swift */; };
+		A64850151C90F24F001C668E /* G.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64850141C90F24F001C668E /* G.swift */; };
 		A691109B1C617F65004F3D97 /* Meet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A691109A1C617F65004F3D97 /* Meet.swift */; };
 		A691109D1C62A9C8004F3D97 /* MeetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A691109C1C62A9C8004F3D97 /* MeetViewController.swift */; };
 		A691109F1C62E5DB004F3D97 /* MeetNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A691109E1C62E5DB004F3D97 /* MeetNavigationController.swift */; };
@@ -63,6 +64,7 @@
 		A6348FD21C76BA2100447525 /* MeetController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetController.swift; sourceTree = "<group>"; };
 		A63C267E1C7CB6CF00C87C72 /* YourMeetsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YourMeetsViewController.swift; sourceTree = "<group>"; };
 		A64850121C7CE55F001C668E /* MeetSettingsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetSettingsController.swift; sourceTree = "<group>"; };
+		A64850141C90F24F001C668E /* G.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = G.swift; sourceTree = "<group>"; };
 		A691109A1C617F65004F3D97 /* Meet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Meet.swift; sourceTree = "<group>"; };
 		A691109C1C62A9C8004F3D97 /* MeetViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetViewController.swift; sourceTree = "<group>"; };
 		A691109E1C62E5DB004F3D97 /* MeetNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeetNavigationController.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 				A6348FD21C76BA2100447525 /* MeetController.swift */,
 				A63C267E1C7CB6CF00C87C72 /* YourMeetsViewController.swift */,
 				A64850121C7CE55F001C668E /* MeetSettingsController.swift */,
+				A64850141C90F24F001C668E /* G.swift */,
 			);
 			path = Ratings;
 			sourceTree = "<group>";
@@ -349,6 +352,7 @@
 				A6CC68141C605277004DE1C2 /* LocationSelectionViewController.swift in Sources */,
 				A603113A1C697B0D00ECDC1E /* ChatsViewController.swift in Sources */,
 				A691109F1C62E5DB004F3D97 /* MeetNavigationController.swift in Sources */,
+				A64850151C90F24F001C668E /* G.swift in Sources */,
 				A603113E1C697D6F00ECDC1E /* User.swift in Sources */,
 				A60311481C6C1B4100ECDC1E /* PersonViewController.swift in Sources */,
 			);
