@@ -20,7 +20,9 @@ class MeetController: UITableViewController {
     var isCurrentUserHost = false
     var isCurrentUserAttendee = false
     
-    let dummyUserId = "56dbb2013cd9a60ed58b1ae2"
+    let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
+    
+    var isJoining = false;
 
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var unwindButton: UIBarButtonItem!
@@ -48,8 +50,16 @@ class MeetController: UITableViewController {
             self.numberLabel.text = String(self.meet!["count"]! as! Int!) + "/" + String(self.meet!["maxCount"]! as! Int!)
             
             // setting the join button text:
-            if isCurrentUserAttendee {
+            if isCurrentUserAttendee || isCurrentUserHost{
                 self.joinSettingsButton.title = "settings"
+                
+                // setting the color:
+                if isCurrentUserHost {
+                    self.numberLabel.textColor = UIColor.orangeColor()
+                } else {
+                    self.numberLabel.textColor = UIColor.greenColor();
+                }
+                
             } else {
                 self.joinSettingsButton.title = "join"
                 threadToolbar.hidden = true
@@ -69,8 +79,11 @@ class MeetController: UITableViewController {
         
         Alamofire.request(.GET, url) .responseJSON { response in
             
+            
             if let JSON = response.result.value {
                 // TODO: handle the error case!!
+                print("Got meet")
+                print(JSON)
                 self.meet = JSON["meet"]
                 self.isCurrentUserAttendee = (JSON["isAttending"]! as! Bool!)
                 self.isCurrentUserHost = (JSON["isHost"]! as! Bool!)
@@ -81,11 +94,58 @@ class MeetController: UITableViewController {
     
     func joinMeet() {
         print("joining meet!")
+        
+        // making POST request to server to join meets:
+        let url = "https://one-mile.herokuapp.com/join_meet"
+        print("joinMeet() url: \(url)")
+        
+        
+        Alamofire.request(.POST, url, parameters: ["meetId": self.meetId!, "userId": self.dummyUserId]) .responseJSON { response in
+            
+            // setting isJoining to false (must be true right now, or we wouldn't be here);
+            self.isJoining = false
+            print("handling the returned thing from Request");
+            
+            if let JSON = response.result.value {
+                
+                if (JSON["error"]! != nil) {
+
+                    // need to explicitly end refreshing in this method because setTheMeet() not called in this conditional brach:
+                    self.refreshControl?.endRefreshing()
+                    
+                    // display a UIAlertView with message:
+                    let alert = UIAlertController(title: ":(", message: (JSON["error"]! as! String!), preferredStyle: UIAlertControllerStyle.Alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+                    self.presentViewController(alert, animated: true, completion: nil)
+                    
+                } else {
+                    self.meet = JSON["meet"]
+                    print(JSON["meet"])
+                    
+                    // TODO: setting the following bools w/ values returned from the Server would be much safer. Current code
+                    // is making an assumption.
+                    print("received meet: \(self.meet!["_id"]! as! String!)")
+                    self.isCurrentUserAttendee = true;
+                    self.isCurrentUserHost = false;
+                    self.setTheMeet()
+                }
+            }
+        }
     }
     
     func handleRefresh(refreshControl: UIRefreshControl) {
         print("handling Refresh!")
-        fetchMeet()
+        if (self.isJoining) {
+            joinMeet()
+        } else {
+            fetchMeet()
+        }
+    }
+    
+    func startRefresh() {
+        self.tableView.setContentOffset(CGPointMake(0, self.tableView.contentOffset.y-(self.refreshControl?.frame.size.height)!), animated: true);
+        self.refreshControl?.beginRefreshing()
+        self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
     }
     
     override func viewDidLoad() {
@@ -93,13 +153,20 @@ class MeetController: UITableViewController {
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         
         // ---> http://stackoverflow.com/questions/14718850/uirefreshcontrol-beginrefreshing-not-working-when-uitableviewcontroller-is-ins
-        
-        self.tableView.setContentOffset(CGPointMake(0, self.tableView.contentOffset.y-(self.refreshControl?.frame.size.height)!), animated: true);
-        self.refreshControl?.beginRefreshing()
-        self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
+        startRefresh()
+
         
         // setting the unwind button text:
         unwindButton.title = from
+    }
+    
+    
+    // MARK: - Navigation
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        if let peopleViewController = segue.destinationViewController as? PeopleViewController {
+            peopleViewController.meetId = self.meetId!
+        }
     }
     
     @IBAction func unwindMeet(sender: UIBarButtonItem) {
@@ -114,16 +181,11 @@ class MeetController: UITableViewController {
     
     @IBAction func settingsOrJoin(sender: UIBarButtonItem) {
         if !isCurrentUserAttendee {
-            // stay in this view; send request to server,
-            // and render a UIAlertView when it comes back
-            // notifiying user that they've succesfully joined / failed.
-            // and then refresh the view --> will now have member display.
-//            isCurrentUserAttendee = true // HACK for UI DEmo!
-//            self.joinSettingsButton.title = "settings"
-//            self.threadToolbar.hidden = false
+            // trigger join meet:
+            self.isJoining = true;
             
-            // temporary UI changes to reflect update in meet count:
-            joinMeet()
+            // now starting the refresh:
+            startRefresh()
             
         } else {
             // this is the settings:

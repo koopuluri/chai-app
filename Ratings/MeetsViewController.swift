@@ -17,32 +17,36 @@ class MeetsViewController: UITableViewController {
     var start = 0
     var count = 10
     
-    func reloadMeetsFromServer() {
+ 
+    func startRefresh() {
+        self.tableView.setContentOffset(CGPointMake(0, self.tableView.contentOffset.y-(self.refreshControl?.frame.size.height)!), animated: true);
+        self.refreshControl?.beginRefreshing()
+        self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
+        startRefresh()
+    }
+
+    func handleRefresh(refreshControl: UIRefreshControl) {
         // get current location to use for the query:
         // TODO: currently using dummy:
         var currentLocation = [0.0, 0.0]
         
         // Pulling meets from the server:
         let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(currentLocation[0])&lat=\(currentLocation[1])&start=\(start)&count=\(count)"
+        print("reloadMeetsFromServer: \(url)")
         
         Alamofire.request(.GET, url) .responseJSON { response in
             
             if let JSON = response.result.value {
                 self.meets = JSON["meets"] as? NSMutableArray
                 self.tableView.reloadData()
+                self.refreshControl?.endRefreshing()
             }
         }
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
-        reloadMeetsFromServer()
-    }
-    
-    func handleRefresh(refreshControl: UIRefreshControl) {
-        reloadMeetsFromServer()
     }
     
     @IBAction func unwindMeets(segue: UIStoryboardSegue) {}
