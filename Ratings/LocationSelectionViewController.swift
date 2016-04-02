@@ -9,80 +9,50 @@
 import UIKit
 import MapKit
 
-class LocationSelectionViewController: UIViewController, CLLocationManagerDelegate {
-
+class LocationSelectionViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
-
+    
     @IBOutlet weak var pointerImage: UIImageView!
     
     @IBOutlet weak var createMeetButton: UIButton!
+
+    var initialCoords: CLLocationCoordinate2D?
     
-    
+    var selectedCoords: CLLocationCoordinate2D?
+
     var meetTitle: String!
     var meetDescription: String!
     
-    
-    @IBAction func cancelToMeetsViewController(segue:UIStoryboardSegue) {
-        print("canceling out of select location view to MeetsViewController!")
-    }
-    
-    @IBAction func createMeet(segue:UIStoryboardSegue) {
-        print("in createMeet(), \(self.meetTitle), \(self.meetDescription)")
-    }
-    
     var locManager = CLLocationManager()
+    var span = MKCoordinateSpanMake(0.01, 0.01)
     
-    let regionRadius: CLLocationDistance = 1000
-    func centerMapOnLocation(location: CLLocation) {
-        let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
-            regionRadius * 2.0, regionRadius * 2.0)
-        mapView.setRegion(coordinateRegion, animated: true)
+    func centerMapOnLocation(location: CLLocationCoordinate2D) {
+        let region:MKCoordinateRegion = MKCoordinateRegionMake(location, span)
+        mapView.setRegion(region, animated: false)
     }
     
     var initialized = false
     
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        self.selectedCoords = mapView.centerCoordinate
+    }
+    
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         // if initial location not set to current location, do so: else nothing.
         if (!self.initialized) {
-            let locValue:CLLocationCoordinate2D = locManager.location!.coordinate
-            print("current coordinates: \(locValue.latitude), \(locValue.longitude)")
-            let initialLocation = CLLocation(latitude: locValue.latitude, longitude: locValue.longitude)
+            let initialLocation:CLLocationCoordinate2D = CLLocationCoordinate2DMake(self.initialCoords!.latitude, self.initialCoords!.longitude)
             centerMapOnLocation(initialLocation)
             self.initialized = true
         } else {
-            //println("already initialized, doing nothing for this redraw!")
+            print("already initialized, doing nothing for this redraw!")
         }
     }
-    
-    // pass on the newMeet to the MeetView that this is seguing to!
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        print("LocationSelectionController.prepareForSegue().destination: \(segue.destinationViewController)")
-        if let meetNavController = segue.destinationViewController as? MeetNavigationController {
-            let newMeet = Meetup(
-                title: self.meetTitle,
-                time: "in 10 minutes",
-                count: 10,
-                description: self.meetDescription,
-                hostName: "Karthik Uppuluri",
-                maxCount: 10,
-                locationX: self.mapView.centerCoordinate.latitude,
-                locationY: self.mapView.centerCoordinate.longitude)
-            
-            // setting the newMEet var for MeetViewController (the first view controller in the MeetNav stack:
-            let meetController = meetNavController.viewControllers.first as! MeetController
-            meetController.meet = newMeet
-            meetController.isCurrentUserAttendee = true
-            meetController.from = "All Meets"
-            
-        }
-
-    }
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.mapView.delegate = self
         // Core Location Manager asks for GPS location
         locManager.delegate = self
         locManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -94,20 +64,31 @@ class LocationSelectionViewController: UIViewController, CLLocationManagerDelega
             CLLocationManager.authorizationStatus() == CLAuthorizationStatus.AuthorizedAlways)
         {
             locManager.startUpdatingLocation()
-
+            
         }  else {
-            // if not authorized --> just show gatech? (But needs to be authorized in order to see the 
-            // list meets. In fact, that has to be done in the MainView as well (when querying server 
+            // if not authorized --> just show gatech? (But needs to be authorized in order to see the
+            // list meets. In fact, that has to be done in the MainView as well (when querying server
             // to get the list of meets based on certain coordinates).
             print("location not authorized")
         }
     }
     
-    
-//
-//    override func didReceiveMemoryWarning() {
-//        super.didReceiveMemoryWarning()
-//        // Dispose of any resources that can be recreated.
-//    }
-
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if let createMeetController = segue.destinationViewController as? CreateMeetController {
+            print("Going back to CreateMeetController!")
+            createMeetController.currentPosition = self.selectedCoords
+            
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+

@@ -7,129 +7,134 @@
 //
 
 import UIKit
+import Alamofire
 
-var upcomingMeets = [
-    Meetup(
-        title: "Research Sharing over Coffee",
-        time: "tomorrow at 5pm",
-        count: 2,
-        description: "Hey! I do research in physics, and am presenting a topic at a conference over the weekend. I'd love to run by my thoughts and get some feedback. You don't have to be versed in physics - in fact, I'd prefer it if you weren't. I'm open to hearing about anything you're doing as well, and will give you honest feedback. Coffee's on me! I'll also be bringing popcorn; let me know if you'll be bringing anything as well. See you there!",
-        hostName: "Richard Feynman",
-        maxCount: 3,
-        locationX: 0.0,
-        locationY: 0.0),
-    
-    Meetup(
-        title: "Post Exam Stress Relief Punching",
-        time: "tomorrow at 5pm",
-        count: 15,
-        description: "I bombed a test. I want to punch things. I'm taking my pillow out to Tech Lawn and punch it for as long as I can. I'd love to hear about your shitty test taking as well. Knowing others messed up makes me feel better... is that weird? Bring your pillow!",
-        hostName: "Richard Feynman",
-        maxCount: 20,
-        locationX: 0.0,
-        locationY: 0.0)
-]
-
-
-var previousMeets = [
-    Meetup(
-        title: "Starcraft Practice",
-        time: "in 8 hours",
-        count: 15,
-        description: "Getting together to practice before the next nationwide tournament. All skill levels welcome! BYOFood.",
-        hostName: "Jon Woo",
-        maxCount: 100,
-        locationX: 0.0,
-        locationY: 0.0),
-
-    Meetup(
-    title: "Long Distance Running Partner",
-    time: "tomorrow at 7am",
-    count: 2,
-    description: "Ping pong tournament at the CRC. $5 entry fee.",
-    hostName: "Amy Chen",
-    maxCount: 100,
-    locationX: 0.0,
-    locationY: 0.0),
-
-    Meetup(
-    title: "Help Make the Largest Cupcake",
-    time: "tomorrow at 9am",
-    count: 2,
-    description: "Ping pong tournament at the CRC. $5 entry fee.",
-    hostName: "Ken Pen",
-    maxCount: 100,
-    locationX: 0.0,
-    locationY: 0.0),
-
-    Meetup(
-    title: "Settlers of Catan Game",
-    time: "tomorrow at 3pm",
-    count: 5,
-    description: "Ping pong tournament at the CRC. $5 entry fee.",
-    hostName: "Goldilocks Goldi",
-    maxCount: 100,
-    locationX: 0.0,
-    locationY: 0.0),
-]
 
 class YourMeetsViewController: UITableViewController {
     
-    let data = [upcomingMeets, previousMeets]
+    let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
+    
+    var upcomingMeets: [AnyObject] = []
+    var previousMeets: [AnyObject] = []
+    
+    var data: [AnyObject] = []
+    
+    var start = 0
+    var count = 10
+    
     let headerTitles = ["Upcoming", "Previous"]
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         return 2
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data[section].count
+    func startRefresh() {
+        self.tableView.setContentOffset(CGPointMake(0, self.tableView.contentOffset.y-(self.refreshControl?.frame.size.height)!), animated: true);
+        self.refreshControl?.beginRefreshing()
+        self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
+        startRefresh()
+    }
+
+    func handleRefresh(refreshControl: UIRefreshControl) {
+        // get current location to use for the query:
+        // TODO: currently using dummy:
+        
+        // Pulling meets from the server:
+        let url = "https://one-mile.herokuapp.com/user_meets?userId=\(self.dummyUserId)&start=\(start)&count=\(count)"
+        print("yourMeets.url: \(url)")
+        
+        Alamofire.request(.GET, url) .responseJSON { response in
+            
+            if let JSON = response.result.value {
+                let meets = JSON["meets"] as? NSMutableArray
+                let currentTime = NSDate()
+                
+                if (JSON["error"]! != nil) {
+                    
+                    // display a UIAlertView with message:
+                    let alert = UIAlertController(title: ":(", message: (JSON["error"]! as! String!), preferredStyle: UIAlertControllerStyle.Alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+                    self.presentViewController(alert, animated: true, completion: nil)
+                    return
+                }
+                
+                // Slightly inefficient, optimize later...
+                if self.previousMeets.count == 0 {
+                    for meet in meets! {
+                        
+                        // getting current time:
+                        let startTimeString = meet["startTime"]! as! String!
+                        
+                        print("startTimeString: \(startTimeString)")
+                        let dateFormatter = NSDateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                        let startTime = dateFormatter.dateFromString(startTimeString)
+                        
+                        
+                        if startTime!.compare(currentTime) ==  NSComparisonResult.OrderedDescending {
+                            self.upcomingMeets.append(meet)
+                        } else {
+                            self.previousMeets.append(meet)
+                        }
+                    }
+                } else {
+                    // all fetched meets are previous meets:
+                    self.previousMeets.appendContentsOf(meets!)
+                }
+                
+                self.data.append(self.upcomingMeets)
+                self.data.append(self.previousMeets)
+                
+                // reload data, and end refreshing:
+                self.tableView.reloadData()
+                self.refreshControl?.endRefreshing()
+            }
+        }
+    }
+    
+    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if data.count > 0 {
+            return data[section].count
+        } else {
+            return 0
+        }
+    }
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCellWithIdentifier("YourMeetCell", forIndexPath: indexPath)
         let meet = data[indexPath.section][indexPath.row]
     
+        // if current user is host of meet, special background color:
+        if (meet["isHost"]! as! Bool) {
+            cell.backgroundColor = UIColor.lightGrayColor()
+        }
         
+        if let titleLabel = cell.viewWithTag(100) as? UILabel {
+            titleLabel.text = meet["meet"]!!["title"]! as! String!
+            titleLabel.textColor = UIColor.blackColor()
+        }
         
-        if (indexPath.section == 0) {
-            if let titleLabel = cell.viewWithTag(100) as? UILabel {
-                titleLabel.text = meet.title
-                titleLabel.textColor = UIColor.blackColor()
-            }
-            
-            if let hostLabel = cell.viewWithTag(101) as? UILabel {
-                hostLabel.text = meet.hostName
-            }
-            
-            if let timeLabel = cell.viewWithTag(102) as? UILabel {
-                timeLabel.text = meet.time
+        if let hostLabel = cell.viewWithTag(101) as? UILabel {
+            hostLabel.text = (meet["meetHost"]!!["firstName"]! as! String!) + (meet["meetHost"]!!["lastName"]! as! String!)
+        }
+        
+        if let timeLabel = cell.viewWithTag(102) as? UILabel {
+            timeLabel.text = meet["startTime"] as! String!
+            if (indexPath.section == 0) {
                 timeLabel.textColor = UIColor.blueColor()
-                
             }
-            
-            if let countLabel = cell.viewWithTag(103) as? UILabel {
-                countLabel.text = String(meet.count)
+        }
+        
+        if let countLabel = cell.viewWithTag(103) as? UILabel {
+            countLabel.text = String(meet["meet"]!!["count"]! as! Int!)
+            if (indexPath.section == 0) {
                 countLabel.textColor = UIColor.blueColor()
-            }
-            
-        } else {
-            if let titleLabel = cell.viewWithTag(100) as? UILabel {
-                titleLabel.text = meet.title
-            }
-            
-            if let hostLabel = cell.viewWithTag(101) as? UILabel {
-                hostLabel.text = meet.hostName
-            }
-            
-            if let timeLabel = cell.viewWithTag(102) as? UILabel {
-                timeLabel.text = meet.time
-            }
-            
-            if let countLabel = cell.viewWithTag(103) as? UILabel {
-                countLabel.text = String(meet.count)
             }
         }
         
@@ -157,7 +162,7 @@ class YourMeetsViewController: UITableViewController {
                 
                 // setting the newMEet var for MeetViewController (the first view controller in the MeetNav stack:
                 let meetController = meetNavController.viewControllers.first as! MeetController
-                meetController.meet = meet
+                meetController.meetId = meet["meet"]!!["_id"]! as! String!
                 meetController.isCurrentUserAttendee = true
                 meetController.from = "Your Meets"
                 print("meetController meet set coming from MeetsController.prototypeCell")

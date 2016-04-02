@@ -30,11 +30,17 @@ class MeetsViewController: UITableViewController {
         startRefresh()
     }
 
+    
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        self.tabBarController?.tabBar.hidden = false
+    }
+    
     func handleRefresh(refreshControl: UIRefreshControl) {
         // get current location to use for the query:
         // TODO: currently using dummy:
         var currentLocation = [0.0, 0.0]
-        
+
         // Pulling meets from the server:
         let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(currentLocation[0])&lat=\(currentLocation[1])&start=\(start)&count=\(count)"
         print("reloadMeetsFromServer: \(url)")

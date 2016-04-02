@@ -2,18 +2,18 @@
   "images" : [
     {
       "idiom" : "universal",
-      "scale" : "1x",
-      "filename" : "location.png"
+      "filename" : "mapPinBy3.png",
+      "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "scale" : "2x",
-      "filename" : "location-1.png"
+      "filename" : "mapPinBy2.png",
+      "scale" : "2x"
     },
     {
       "idiom" : "universal",
-      "scale" : "3x",
-      "filename" : "location-2.png"
+      "filename" : "mapPin.png",
+      "scale" : "3x"
     }
   ],
   "info" : {
