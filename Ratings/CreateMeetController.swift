@@ -54,10 +54,12 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
             locationController.initialCoords = self.currentPosition
         }
         
-        if let meetNavController = segue.destinationViewController as? MeetNavigationController {
-            let meetController = meetNavController.viewControllers.first as! MeetController
+        if let meetNavController = segue.destinationViewController as? MeetChatNavController {
+            let meetController = meetNavController.viewControllers.first as! MeetChatPageViewController
             meetController.meetId = self.newMeetId!
             meetController.from = "All Meets"
+            meetController.mode = "Meet"
+            
             print("meetController meet set coming from CreateMeetController")
         }
     }

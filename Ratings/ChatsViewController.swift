@@ -48,6 +48,22 @@ class ChatsViewController: UITableViewController {
         startRefresh()
     }
     
+    // MARK: - Navigation
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if let meetNavController = segue.destinationViewController as? MeetChatNavController {
+            
+            if let index = self.tableView.indexPathForSelectedRow?.row {
+                let meetId = chatThreads![index]["meet"]!!["_id"]! as! String!  // getting the meetId for the selected meet.
+                let meetController = meetNavController.viewControllers.first as! MeetChatPageViewController
+                meetController.meetId = meetId
+                meetController.from = "Chats"
+                meetController.mode = "Chat"
+                print("meetController meet set coming from MeetsController.prototypeCell")
+            }
+        }
+    }
+
+    
     func handleRefresh(refreshControl: UIRefreshControl) {
         // get current location to use for the query:
         // TODO: currently using dummy:

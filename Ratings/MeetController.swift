@@ -23,7 +23,7 @@ class MeetController: UITableViewController {
     let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
     
     var isJoining = false;
-
+    
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var unwindButton: UIBarButtonItem!
     
@@ -41,6 +41,7 @@ class MeetController: UITableViewController {
     
     @IBOutlet weak var joinSettingsButton: UIBarButtonItem!
     
+
     func setTheMeet() {
         if (self.meet != nil) {
             self.titleLabel.text = self.meet!["title"]! as! String!

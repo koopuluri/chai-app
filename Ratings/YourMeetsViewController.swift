@@ -14,10 +14,10 @@ class YourMeetsViewController: UITableViewController {
     
     let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
     
-    var upcomingMeets: [AnyObject] = []
-    var previousMeets: [AnyObject] = []
+    var upcomingMeets: NSMutableArray = []
+    var previousMeets: NSMutableArray = []
     
-    var data: [AnyObject] = []
+    var data: [NSMutableArray] = []
     
     var start = 0
     var count = 10
@@ -75,16 +75,15 @@ class YourMeetsViewController: UITableViewController {
                         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
                         let startTime = dateFormatter.dateFromString(startTimeString)
                         
-                        
                         if startTime!.compare(currentTime) ==  NSComparisonResult.OrderedDescending {
-                            self.upcomingMeets.append(meet)
+                            self.upcomingMeets.addObject(meet)
                         } else {
-                            self.previousMeets.append(meet)
+                            self.previousMeets.addObject(meet)
                         }
                     }
                 } else {
                     // all fetched meets are previous meets:
-                    self.previousMeets.appendContentsOf(meets!)
+                    self.previousMeets.addObjectsFromArray(meets! as [AnyObject])
                 }
                 
                 self.data.append(self.upcomingMeets)

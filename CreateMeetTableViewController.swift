@@ -31,11 +31,11 @@ class CreateMeetTableViewController: UITableViewController, UIPickerViewDelegate
         print("createMeetController.prepareForSegue():")
         print("dis what we got: title: \(self.titleTextField.text), description: \(self.descriptionTextField.text)")
         
-        if let locationController = segue.destinationViewController as? LocationSelectionViewController {
-            locationController.meetDescription = self.descriptionTextField.text!
-            locationController.meetTitle = self.titleTextField.text!
-            print("locationController stuff set!")
-        }
+//        if let locationController = segue.destinationViewController as? LocationSelectionViewController {
+//            locationController.meetDescription = self.descriptionTextField.text!
+//            locationController.meetTitle = self.titleTextField.text!
+//            print("locationController stuff set!")
+//        }
     }
     
     

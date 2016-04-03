@@ -16,7 +16,6 @@ class MeetsViewController: UITableViewController {
     var meets: NSMutableArray?
     var start = 0
     var count = 10
-    
  
     func startRefresh() {
         self.tableView.setContentOffset(CGPointMake(0, self.tableView.contentOffset.y-(self.refreshControl?.frame.size.height)!), animated: true);
@@ -29,7 +28,6 @@ class MeetsViewController: UITableViewController {
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         startRefresh()
     }
-
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
@@ -59,14 +57,16 @@ class MeetsViewController: UITableViewController {
     
     // MARK: - Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if let meetNavController = segue.destinationViewController as? MeetNavigationController {
+        if let meetChatNavController = segue.destinationViewController as? MeetChatNavController {
             
             if let index = self.tableView.indexPathForSelectedRow?.row {
                 let meetId = meets![index]["_id"]! as! String!  // getting the meetId for the selected meet.
-                let meetController = meetNavController.viewControllers.first as! MeetController
-                meetController.meetId = meetId
-                meetController.from = "All Meets"
-                print("meetController meet set coming from MeetsController.prototypeCell")
+                let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
+                
+                print("seguing to meetChatController: \(meetId)")
+                meetChatController.meetId = meetId
+                meetChatController.from = "Meets"
+                meetChatController.mode = "Meet"
             }
         }
     }
@@ -93,7 +93,6 @@ class MeetsViewController: UITableViewController {
             return self.meets!.count
         }
     }
-
 
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
