@@ -20,6 +20,11 @@ class ChatsViewController: UITableViewController {
     
     // MARK: - Table view data source
     
+    @IBAction func toMeets(sender: UIBarButtonItem) {
+        let poop = self.navigationController?.parentViewController as? MainController
+        poop!.programmaticallyMoveToPage(1, direction: UIPageViewControllerNavigationDirection.Reverse)
+    }
+    
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Potentially incomplete method implementation.
         // Return the number of sections.

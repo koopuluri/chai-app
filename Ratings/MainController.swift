@@ -7,13 +7,45 @@
 //
 
 import UIKit
+import ActionButton
 
 class MainController: UIPageViewController {
+    
+    var actionButton: ActionButton!
+    
+    var navbarButtons: [UIButton]!
+    
+    // page indices to keep track of transitions:
+    var currentPageIndex = 1
+    var previousPageIndex = -1
     
     let meetsController = UIStoryboard(name: "Main", bundle: nil) .
         instantiateViewControllerWithIdentifier("MeetsController")
     
+    let settingsController = UIStoryboard(name: "Main", bundle: nil) .
+        instantiateViewControllerWithIdentifier("SettingsController")
+    
+    let chatsController = UIStoryboard(name: "Main", bundle: nil) .
+        instantiateViewControllerWithIdentifier("ChatsController")
+    
     @IBAction func unwindMain(segue: UIStoryboardSegue) {}
+    
+    func createMeetSegue() {
+        self.performSegueWithIdentifier("CreateMeetSegue", sender: nil)
+    }
+    
+    func getBarButtonIcon(imagePath: String) -> UIBarButtonItem {
+        let btnName = UIButton()
+        btnName.setImage(UIImage(named: imagePath), forState: .Normal)
+        btnName.frame = CGRectMake(0, 0, 30, 30)
+        btnName.addTarget(self, action: Selector("action"), forControlEvents: .TouchUpInside)
+        
+        let barButton = UIBarButtonItem()
+        barButton.customView = btnName
+        
+        return barButton
+
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,42 +58,60 @@ class MainController: UIPageViewController {
                            animated: true,
                            completion: nil)
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "settings", style: UIBarButtonItemStyle.Plain, target: self, action: Selector())
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "chats", style: UIBarButtonItemStyle.Plain, target: self, action: Selector())
-        self.navigationItem.title = "Meets"
+        // setting bg color of navigationBar to white:
+        self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
+        
+        // Action button related stuff:
+        actionButton = ActionButton(attachedToView: self.view, items: [])
+        actionButton.action = { button in button.toggleMenu() }
+        actionButton.setTitle("+", forState: .Normal)
+        
+        actionButton.backgroundColor = UIColor(red: 238.0/255.0, green: 130.0/255.0, blue: 34.0/255.0, alpha:1.0)
+        
+        actionButton.action = { item in self.createMeetSegue() }
     }
     
     func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {
         return 1
     }
-    
+
     private(set) lazy var orderedViewControllers: [UIViewController] = {
         return [
-            
-            UIStoryboard(name: "Main", bundle: nil) .
-                instantiateViewControllerWithIdentifier("SettingsController"),
-            
+            self.settingsController,
             self.meetsController,
-            
-            UIStoryboard(name: "Main", bundle: nil) .
-                instantiateViewControllerWithIdentifier("ChatsController")
+            self.chatsController
         ]
     }()
+    
+    func programmaticallyMoveToPage(index: Int, direction: UIPageViewControllerNavigationDirection) {
+        
+        print("programmaticallyMoveToPage \(index) -- direction: \(direction.rawValue)")
+        
+        let selectedViewController = self.orderedViewControllers[index]
+        
+        self.setViewControllers([selectedViewController],
+                                direction: direction,
+                                animated: false,
+                                completion: nil)
+        
+        // making the color transition:
+        print("button transition: \(self.currentPageIndex) --> \(index)")
+        self.previousPageIndex = self.currentPageIndex
+        self.currentPageIndex = index
+    }
 }
-
-
-
 
 extension MainController: UIPageViewControllerDelegate {
     
     func pageViewController(pageViewController: UIPageViewController,
                             willTransitionToViewControllers pendingViewControllers:[UIViewController]) {
-        print("nibName: \(NSStringFromClass(pendingViewControllers[0].classForCoder))")
-        if (NSStringFromClass(pendingViewControllers[0].classForCoder) == "Ratings.MeetThreadViewController") {
-            //self.pageIndex = 1
-        } else {
-            //self.pageIndex = 0
-        }
+    }
+    
+    // weird workaround to add tintColor... http://stackoverflow.com/a/26443287
+    func setButtonTintColor(button: UIButton?, color: UIColor?) {
+        button?.imageView!.image = button?.imageView!.image!.imageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
+        
+        button?.imageView?.tintColor = color
     }
     
     func pageViewController(pageViewController: UIPageViewController,
@@ -69,7 +119,7 @@ extension MainController: UIPageViewControllerDelegate {
                                                previousViewControllers: [UIViewController],
                                                transitionCompleted completed: Bool) {
         if (finished && completed && previousViewControllers.count > 0) {
-            
+            // time to change the selected, corresponding icons:
         }
     }
 }

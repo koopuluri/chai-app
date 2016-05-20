@@ -117,7 +117,6 @@ class MeetChatPageViewController: UIPageViewController {
                     // between Meet Information and ChatView:
                     self.setSwitchSegment(0)
                 }
-
             }
         }
     }
@@ -148,7 +147,6 @@ class MeetChatPageViewController: UIPageViewController {
         meetController.meetId = meetId;
         return meetController
     }
-    
     
     // only called when the user has just successfuly "joined" a meet.
     // ==> add a chatView page, and set the switchSegment on the navbar (and it remains on the "Meet info" page)
