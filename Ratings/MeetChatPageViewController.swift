@@ -14,10 +14,14 @@ class MeetChatPageViewController: UIPageViewController {
     
     let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
     
-    @IBOutlet weak var titleButton: UIButton!
     var meetId: String?
     var from: String?
     var mode: String?
+    
+    @IBOutlet weak var titleButton: UIButton!
+    @IBOutlet weak var titleSpinner: UIActivityIndicatorView!
+    
+    @IBOutlet weak var titleView: UIView!
     
     var meetController: UIViewController?
     var chatController: UIViewController?
@@ -32,28 +36,108 @@ class MeetChatPageViewController: UIPageViewController {
         dataSource = self
         delegate = self
         
-        var startController: UIViewController?
-        if (self.mode == "Meet") {
-            startController = orderedViewControllers[0]
-        } else {
-            startController = orderedViewControllers[1]
+        fetchAndSetUserMeetInfo()
+    }
+    
+    
+    // gets following info about user-meet:
+    // - {isHost?, isAttendee?, meetTitle}
+    // once info is retrieved, determines navBar color, rightBarButtonItem, etc.
+    // on start - puts loading
+    func fetchAndSetUserMeetInfo() {
+        if ((self.meetId) != nil) {
+            let url = "https://one-mile.herokuapp.com/user_meet_info?meetId=\(self.meetId!)&userId=\(self.dummyUserId)"
             
-            // and need to set the switchSegment here, because it's already known that the current user
-            // is a part of this meet:
-            self.setSwitchSegment(1)
+            print("fetchMeetInfoUrl: \(url)")
+            
+            startTitleLoading()
+            Alamofire.request(.GET, url) .responseJSON { response in
+                if let JSON = response.result.value {
+                    // TODO: handle the error case!!
+
+                    let isAttendee = (JSON["isAttending"]! as! Bool!)
+                    let isHost = (JSON["isHost"]! as! Bool!)
+                    let meetTitle = (JSON["title"] as! String!)
+                    
+                    print("isAttendee: \(isAttendee)")
+                    print("isHost: \(isHost)")
+                    
+                    // setting navbar:
+                    if (isHost || isAttendee) {
+                        
+                        // push the chatView:
+                        self.chatController = self.newChatController(self.meetId)
+                        self.orderedViewControllers.append(self.chatController!)
+                        
+                        
+                        // setting the correct view
+                        var startController: UIViewController?
+                        if (self.mode == "Meet") {
+                            startController = self.orderedViewControllers[0]
+                            self.setSwitchSegment(0)
+                        } else {
+                            startController = self.orderedViewControllers[1]
+                            self.setSwitchSegment(1)
+                        }
+                        self.setViewControllers([startController!],
+                            direction: .Forward,
+                            animated: true,
+                            completion: nil)
+
+                        
+                        // set the color of the navbar:
+                        if (!isHost) {
+                            // user is only attendee:
+                            self.navigationController!.navigationBar.barTintColor = UIColor.blueColor()
+                        } else {
+                            // user is a host:
+                            self.navigationController!.navigationBar.barTintColor = UIColor.greenColor()
+                        }
+                    } else {
+                        
+                        // startView controller is the meetController:
+                        let startController = self.orderedViewControllers[0]
+                        self.setViewControllers([startController],
+                            direction: .Forward,
+                            animated: true,
+                            completion: nil)
+                        
+                        
+                        // user is not part of meet: ==> set joinButton, and reg. background color
+                        self.navigationController!.navigationBar.barTintColor = UIColor.orangeColor()
+                        
+                        
+                        // set the joinButton:
+                        let joinButton = UIBarButtonItem(title: "join", style: UIBarButtonItemStyle.Plain, target: self, action: #selector(self.joinMeet))
+                        
+                        self.navigationItem.rightBarButtonItem = joinButton;
+                    }
+                    
+                    // set the title to the meetTitle
+                    self.setTitleViewText(meetTitle)
+                }
+            }
+        } else {
+            print("meetId is null!")
         }
-        
-        self.setViewControllers([startController!],
-                                direction: .Forward,
-                                animated: true,
-                                completion: nil)
-        
+    }
+    
+    // starts loading spinner in navbar (in titleLabel)
+    func startTitleLoading() {
+        self.titleSpinner.hidden = false
+        self.titleSpinner.startAnimating()
+    }
+    
+    // stops spinner in navbar (in titleLabel)
+    func setTitleViewText(title: String?) {
+        self.titleSpinner.hidden = true
+        self.titleButton.setTitle(title, forState: UIControlState.Normal)
     }
     
     // called when the navigation title button is clicked.
     // only navigates to settings if the user is a member / is host of meet.
     @IBAction func settings() {
-        let meetController = self.meetController! as! PissController
+        let meetController = self.meetController! as! MeetController
         if (meetController.isCurrentUserAttendee || meetController.isCurrentUserHost) {
             // segue to the MeetSettings:
             performSegueWithIdentifier("MeetSettingsSegue", sender: nil)
@@ -97,7 +181,7 @@ class MeetChatPageViewController: UIPageViewController {
                     self.navigationItem.rightBarButtonItem = joinButton;
                     
                 } else {
-                    let meetController = self.meetController! as! PissController
+                    let meetController = self.meetController! as! MeetController
                     meetController.meet = JSON["meet"]
                     print(JSON["meet"])
                     
@@ -122,26 +206,16 @@ class MeetChatPageViewController: UIPageViewController {
     }
     
     private(set) lazy var orderedViewControllers: [UIViewController] = {
+        self.meetController = self.newMeetController(self.meetId)
         
-        if (self.mode == "Meet") {
-            self.meetController = self.newMeetController(self.meetId)
-            
-            return [
-                self.meetController!,
-            ]
-        } else {
-            self.meetController = self.newMeetController(self.meetId)
-            self.chatController = self.newChatController(self.meetId)
-            return [
-                self.meetController!,
-                self.chatController!
-            ]
-        }
+        return [
+            self.meetController!
+        ]
     }()
     
     private func newMeetController(meetId: String?) -> UIViewController {
         let meetController = UIStoryboard(name: "Main", bundle: nil) .
-            instantiateViewControllerWithIdentifier("PissController") as! PissController;
+            instantiateViewControllerWithIdentifier("MeetController") as! MeetController;
         
         print("about to initialize the meetController from MeetChatPageViewController: \(self.meetId)")
         meetController.meetId = meetId;
@@ -160,6 +234,7 @@ class MeetChatPageViewController: UIPageViewController {
     func setSwitchSegment(index: Int?) {
         switchSegment.selectedSegmentIndex = index!
         let switchBarButton = UIBarButtonItem(customView: switchSegment)
+        print("setSwitchSegment!")
         self.navigationItem.rightBarButtonItem = switchBarButton
     }
     
