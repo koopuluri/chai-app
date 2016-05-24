@@ -279,6 +279,11 @@ extension MeetController: UICollectionViewDelegate, UICollectionViewDataSource {
         
         return cell
     }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        print("collectionView click: \(indexPath)")
+        performSegueWithIdentifier("UserModalSegue", sender: nil)
+    }
 }
 
 // collection view layout: centering the users in a row:

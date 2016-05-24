@@ -8,12 +8,15 @@
 
 import UIKit
 import Alamofire
+import SwiftyButton
 
 class MeetChatPageViewController: UIPageViewController {
     //let meetId = "56e1b6f5fa3f0c01f45568cd"
     
+    @IBOutlet weak var joinButton: SwiftyButton!
     let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
     
+    @IBOutlet weak var joinSpinner: UIActivityIndicatorView!
     var meetId: String?
     var from: String?
     var mode: String?
@@ -36,9 +39,24 @@ class MeetChatPageViewController: UIPageViewController {
         dataSource = self
         delegate = self
         
+        
         fetchAndSetUserMeetInfo()
     }
     
+    // adding another page for ChatView:
+    func addChatView() {
+        self.chatController = self.newChatController(self.meetId)
+        self.orderedViewControllers.append(self.chatController!)
+    }
+    
+    @IBAction func transitionMeetSettings(sender: UIButton) {
+//        let settingsModalViewController = MeetSettingsModalViewController()
+//        settingsModalViewController.modalPresentationStyle = .OverCurrentContext
+//        presentViewController(settingsModalViewController, animated: true, completion: nil)
+        
+        performSegueWithIdentifier("MeetSettingsSegue", sender: self)
+        
+    }
     
     // gets following info about user-meet:
     // - {isHost?, isAttendee?, meetTitle}
@@ -55,8 +73,8 @@ class MeetChatPageViewController: UIPageViewController {
                 if let JSON = response.result.value {
                     // TODO: handle the error case!!
 
-                    let isAttendee = (JSON["isAttending"]! as! Bool!)
-                    let isHost = (JSON["isHost"]! as! Bool!)
+                    var isAttendee = (JSON["isAttending"]! as! Bool!)
+                    var isHost = (JSON["isHost"]! as! Bool!)
                     let meetTitle = (JSON["title"] as! String!)
                     
                     print("isAttendee: \(isAttendee)")
@@ -65,10 +83,8 @@ class MeetChatPageViewController: UIPageViewController {
                     // setting navbar:
                     if (isHost || isAttendee) {
                         
-                        // push the chatView:
-                        self.chatController = self.newChatController(self.meetId)
-                        self.orderedViewControllers.append(self.chatController!)
-                        
+                        // adding the chat view as another page:
+                        self.addChatView()
                         
                         // setting the correct view
                         var startController: UIViewController?
@@ -104,13 +120,8 @@ class MeetChatPageViewController: UIPageViewController {
                         
                         
                         // user is not part of meet: ==> set joinButton, and reg. background color
-                        self.navigationController!.navigationBar.barTintColor = UIColor.orangeColor()
+                        self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
                         
-                        
-                        // set the joinButton:
-                        let joinButton = UIBarButtonItem(title: "join", style: UIBarButtonItemStyle.Plain, target: self, action: #selector(self.joinMeet))
-                        
-                        self.navigationItem.rightBarButtonItem = joinButton;
                     }
                     
                     // set the title to the meetTitle
@@ -140,7 +151,7 @@ class MeetChatPageViewController: UIPageViewController {
         let meetController = self.meetController! as! MeetController
         if (meetController.isCurrentUserAttendee || meetController.isCurrentUserHost) {
             // segue to the MeetSettings:
-            performSegueWithIdentifier("MeetSettingsSegue", sender: nil)
+            performSegueWithIdentifier("MeetSettingsSegue", sender: self)
         }
     }
     
@@ -148,19 +159,25 @@ class MeetChatPageViewController: UIPageViewController {
         self.titleButton.setTitle(title, forState: UIControlState.Normal)
     }
     
-    // adds user to meet.
-    // updates UI to reflect addition / displays error UIAlertView in fail case:
-    func joinMeet() {
+    func startJoinSpinner() {
+        self.joinSpinner.hidden = false
+        self.joinSpinner.startAnimating()
+    }
+    
+    func stopJoinSpinner() {
+        self.joinSpinner.hidden = true
+    }
+    
+    @IBAction func joinMeet(sender: SwiftyButton) {
         print("joining meet!")
         
         // making POST request to server to join meets:
         let url = "https://one-mile.herokuapp.com/join_meet"
         print("joinMeet() url: \(url)")
         
-        // start the loading spinner on the right nav button:
-        let spinnerView = UIActivityIndicatorView(frame: CGRect(x: 0, y: 0, width: 25, height: 25))
-        let spinnerBarButtonItem = UIBarButtonItem(customView: spinnerView)
-        self.navigationItem.rightBarButtonItem = spinnerBarButtonItem
+        // starting the join process:
+        self.joinButton.hidden = true
+        startJoinSpinner()
         
         // making request to join current user to meet w/ id=self.meetId:
         Alamofire.request(.POST, url, parameters: ["meetId": self.meetId!, "userId": self.dummyUserId]) .responseJSON { response in
@@ -176,9 +193,7 @@ class MeetChatPageViewController: UIPageViewController {
                     self.presentViewController(alert, animated: true, completion: nil)
                     
                     // replace loading spinner with the join button:
-                    let joinButton = UIBarButtonItem(title: "join", style: UIBarButtonItemStyle.Plain, target: self.parentViewController, action: #selector(self.joinMeet))
-                    
-                    self.navigationItem.rightBarButtonItem = joinButton;
+                    self.joinButton.hidden = false
                     
                 } else {
                     let meetController = self.meetController! as! MeetController
@@ -188,20 +203,20 @@ class MeetChatPageViewController: UIPageViewController {
                     // TODO: setting the following bools w/ values returned from the Server would be much safer. Current code
                     // is making an assumption.
                     print("received meet: \(meetController.meet!["_id"]! as! String!)")
-        
-                    meetController.isCurrentUserAttendee = true;
-                    meetController.isCurrentUserHost = false;
-                    meetController.setTheMeet()
                     
                     // setting the color of navbar to reflect that user is now a part of
                     // the meet:
                     self.navigationController!.navigationBar.barTintColor = UIColor.greenColor()
+                    
+                    self.addChatView()
                     
                     // replace the current loading spinner w/ SwitchSegment to toggle
                     // between Meet Information and ChatView:
                     self.setSwitchSegment(0)
                 }
             }
+            
+            self.stopJoinSpinner()
         }
     }
     

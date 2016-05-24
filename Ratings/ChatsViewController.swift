@@ -113,12 +113,15 @@ class ChatsViewController: UITableViewController {
         
         let lastChatTime = dateFormatter.dateFromString(thread["meet"]!!["lastChatMessage"]!!["timestamp"]! as! String!)
         let lastOpenedTime = dateFormatter.dateFromString(thread["lastOpenedChat"]! as! String!)
-        let isSeen = lastChatTime!.compare(lastOpenedTime!) == NSComparisonResult.OrderedAscending
+        var isSeen = lastChatTime!.compare(lastOpenedTime!) == NSComparisonResult.OrderedAscending
         
         let title = thread["meet"]!!["title"]! as! String!
         //let authorFirstName = thread["meet"]!!["lastChatMessage"]!!["author"]!!["firstName"]! as! String!
         let authorFirstName = "gottaFix"
         let content = thread["meet"]!!["lastChatMessage"]!!["content"]! as! String!
+        
+        // randomly setting isSeen to test out UI: TODO: REMOVE THIS!
+        isSeen = arc4random_uniform(2) == 0 ? true: false
         
         if  isSeen{
         
@@ -130,14 +133,11 @@ class ChatsViewController: UITableViewController {
                 timeLabel.text = String(lastChatTime!)
             }
         
-            if let lastAuthorLabel = cell.viewWithTag(102) as? UILabel {
-                lastAuthorLabel.text = authorFirstName + ":"
-            }
-        
             if let lastCommentLabel = cell.viewWithTag(103) as? UILabel {
-                lastCommentLabel.text = content
+                lastCommentLabel.text = authorFirstName + ": " + content
             }
-            return cell 
+            
+            return cell
         } else {
             
             // if unread --> title is bolder, time color is blue, 
@@ -150,18 +150,13 @@ class ChatsViewController: UITableViewController {
             
             if let timeLabel = cell.viewWithTag(101) as? UILabel {
                 timeLabel.text = String(lastChatTime!)
-                timeLabel.textColor = UIColor.blueColor()
+                timeLabel.textColor = UIColor.orangeColor()
             }
             
-            if let lastAuthorLabel = cell.viewWithTag(102) as? UILabel {
-                lastAuthorLabel.text = authorFirstName + ":"
-                lastAuthorLabel.textColor = UIColor.blueColor()
-            }
             
             if let lastCommentLabel = cell.viewWithTag(103) as? UILabel {
-                lastCommentLabel.text = content
+                lastCommentLabel.text = authorFirstName + ": " + content
                 lastCommentLabel.textColor = UIColor.blackColor()
-                lastCommentLabel.font = UIFont.boldSystemFontOfSize(lastCommentLabel.font.pointSize)
             }
             
             return cell 
@@ -169,3 +164,31 @@ class ChatsViewController: UITableViewController {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

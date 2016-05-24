@@ -30,9 +30,9 @@ extension UpcomingCell : UICollectionViewDataSource {
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("upcomingCell", forIndexPath: indexPath) as! UICollectionViewCell
         
-        cell.layer.borderWidth = 1.0
-        cell.layer.borderColor = UIColor.orangeColor().CGColor
-        cell.layer.cornerRadius = 35
+        cell.backgroundColor = UIColor.orangeColor()
+        cell.layer.cornerRadius = 5.0
+        
         // setting values for the cell (currently dummy, change later):
         if let titleLabel = cell.viewWithTag(100) as? UILabel {
             titleLabel.text = "Chai pe Charcha"
@@ -61,7 +61,7 @@ extension UpcomingCell : UICollectionViewDelegateFlowLayout {
 //        let hardCodedPadding:CGFloat = 5
 //        let itemWidth = (collectionView.bounds.width / itemsPerRow) - hardCodedPadding
 //        let itemHeight = collectionView.bounds.height - (2 * hardCodedPadding)
-        return CGSize(width: 70, height: 70)
+        return CGSize(width: 101, height: 70)
     }
     
 }
