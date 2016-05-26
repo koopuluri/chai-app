@@ -350,7 +350,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="217.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" text="Desc" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="KFZ-Li-2up">
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="KFZ-Li-2up">
                                                     <rect key="frame" x="8" y="120" width="359" height="84"/>
                                                     <color key="backgroundColor" red="0.90196079019999997" green="0.90196079019999997" blue="0.90196079019999997" alpha="1" colorSpace="calibratedRGB"/>
                                                     <color key="tintColor" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
@@ -419,12 +419,17 @@
                                                     <color key="textColor" red="0.49803921579999999" green="0.49803921579999999" blue="0.49803921579999999" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Current Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iKn-zE-dPB">
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iKn-zE-dPB">
                                                     <rect key="frame" x="8" y="26" width="334" height="22"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="HAP-M5-1N0">
+                                                    <rect key="frame" x="161" y="26" width="20" height="20"/>
+                                                    <color key="tintColor" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                                    <color key="color" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                         </tableViewCellContentView>
                                     </tableViewCell>
@@ -490,29 +495,30 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="Add Meet" id="GWE-qD-T7R">
-                        <barButtonItem key="rightBarButtonItem" style="plain" id="x3w-vj-ShH">
-                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="aGs-zl-gw6" customClass="SwiftyButton" customModule="SwiftyButton">
-                                <rect key="frame" x="276" y="7" width="83" height="30"/>
+                        <barButtonItem key="rightBarButtonItem" style="plain" id="WYd-q7-YiS">
+                            <view key="customView" contentMode="scaleToFill" id="uY7-Yg-hOh">
+                                <rect key="frame" x="276" y="5" width="83" height="33"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="buttonColor">
-                                        <color key="value" red="0.0" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="highlightedColor">
-                                        <color key="value" red="0.0" green="0.50196081400000003" blue="0.25098040700000002" alpha="1" colorSpace="calibratedRGB"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="shadowColor">
-                                        <color key="value" red="0.0" green="0.50196081400000003" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="disabledButtonColor">
-                                        <color key="value" red="0.80000001190000003" green="0.80000001190000003" blue="0.80000001190000003" alpha="1" colorSpace="calibratedRGB"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="disabledShadowColor">
-                                        <color key="value" red="0.60000002379999995" green="0.60000002379999995" blue="0.60000002379999995" alpha="1" colorSpace="calibratedRGB"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                            </button>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TLA-aI-vfk" customClass="SwiftyButton" customModule="SwiftyButton">
+                                        <rect key="frame" x="0.0" y="2" width="83" height="30"/>
+                                        <state key="normal" title="Button"/>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="color" keyPath="buttonColor">
+                                                <color key="value" red="0.0" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                        <connections>
+                                            <action selector="submit:" destination="hDd-5q-mXy" eventType="touchUpInside" id="61G-zC-4xl"/>
+                                        </connections>
+                                    </button>
+                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="vqK-X3-E3r">
+                                        <rect key="frame" x="31" y="7" width="20" height="20"/>
+                                        <color key="color" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    </activityIndicatorView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </view>
                         </barButtonItem>
                     </navigationItem>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
@@ -521,15 +527,18 @@
                         <outlet property="descriptionTextView" destination="KFZ-Li-2up" id="sho-B5-taU"/>
                         <outlet property="durationSegment" destination="Qcr-8S-3cR" id="baf-8s-etI"/>
                         <outlet property="locationLabel" destination="iKn-zE-dPB" id="oDk-yf-btn"/>
+                        <outlet property="locationSpinner" destination="HAP-M5-1N0" id="17Z-w4-q73"/>
                         <outlet property="maxAttendeesSegment" destination="AE2-h6-fqM" id="leP-lc-gHu"/>
                         <outlet property="startTimeDatePicker" destination="u0L-4K-xaA" id="lDa-a3-QoE"/>
-                        <outlet property="submitButton" destination="x3w-vj-ShH" id="qNg-Va-grx"/>
+                        <outlet property="submitButton" destination="TLA-aI-vfk" id="Nmj-XW-ta1"/>
+                        <outlet property="submitSpinner" destination="vqK-X3-E3r" id="OJe-vV-K52"/>
                         <outlet property="titleTextField" destination="oG8-Cw-Cq0" id="Mgc-Tb-Pba"/>
+                        <segue destination="0XT-cM-E85" kind="presentation" identifier="SelectLocationSegue" id="mCT-Ny-2az"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yNw-EW-9Zk" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-2092.5" y="-1812.5"/>
+            <point key="canvasLocation" x="-2157.5" y="-1783.5"/>
         </scene>
         <!--Select Place-->
         <scene sceneID="4V7-KP-gnK">
@@ -557,7 +566,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="bHO-mK-feF" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1518.5" y="-1024.5"/>
+            <point key="canvasLocation" x="-1660.5" y="-1806.5"/>
         </scene>
         <!--Create Meet-->
         <scene sceneID="jNV-U0-QwB">
@@ -587,7 +596,6 @@
                     <connections>
                         <outlet property="submitButton" destination="TyA-ct-dcm" id="TN3-C8-baq"/>
                         <segue destination="CSJ-9y-BfJ" kind="presentation" identifier="NewMeetSegue" id="aem-PH-vVo"/>
-                        <segue destination="0XT-cM-E85" kind="presentation" identifier="SelectLocationSegue" id="izL-bY-Cej"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ZaX-bV-0BH" userLabel="First Responder" sceneMemberID="firstResponder"/>

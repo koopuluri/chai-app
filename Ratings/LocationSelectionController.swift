@@ -17,22 +17,12 @@ class LocationSelectionController: GMSAutocompleteViewController {
     var selectedCoords: CLLocationCoordinate2D?
     
     override func viewDidLoad() {
-        //let acController = GMSAutocompleteViewController()
         self.delegate = self
-        //self.presentViewController(acController, animated: true, completion: nil)
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if let createMeetController = segue.destinationViewController as? CreateMeetController {
-            print("Going back to CreateMeetController!")
-            
-            let locRow: ButtonRow = createMeetController.form.rowByTag("Location")!
-            locRow.value = "\(self.selectedCoords!.latitude), \(self.selectedCoords!.longitude)"
-            locRow.title = "\(self.selectedCoords!.latitude), \(self.selectedCoords!.longitude)"
-            
-            print("set loc: \(self.selectedCoords!.latitude), \(self.selectedCoords!.longitude)")
-            locRow.reload()
-
+        if let createMeetController = segue.destinationViewController as? PoopForm {
+            print("Going back to PoopForm!")
         }
     }
 }
@@ -48,23 +38,21 @@ extension LocationSelectionController: GMSAutocompleteViewControllerDelegate {
         self.selectedCoords = place.coordinate
         
         // TODO: HOLY SHIT THIS IS BAD PRACTICE, this VC should have no idea what parent is.
-        let createMeetController = self.presentingViewController?.childViewControllers.first as! CreateMeetController!
+        let createMeetController = self.presentingViewController?.childViewControllers.first as! PoopForm!
         
         // setting the location info to pass back:
-        var locInfo = Util.LocationInfo()
+        let locInfo = Util.LocationInfo()
         locInfo.name = place.name
         locInfo.address = place.formattedAddress
         locInfo.coords = place.coordinate
         
-        createMeetController.selectedLocationInfo = locInfo
+        // setting the locInfo
+        createMeetController.locInfo = locInfo
 
         // setting the value of the location selection row:
-        let locRow: ButtonRow = createMeetController.form.rowByTag("Location")!
-        locRow.value = place.formattedAddress
-        locRow.title = place.formattedAddress
-        
+        let locRow = createMeetController.locationLabel
+        locRow.text = place.formattedAddress
         print("set loc: \(self.selectedCoords!.latitude), \(self.selectedCoords!.longitude)")
-        locRow.reload()
         self.dismissViewControllerAnimated(true, completion: nil)
     }
     
