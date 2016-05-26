@@ -10,10 +10,18 @@ import UIKit
 import Foundation
 import MapKit
 import Alamofire
+import GoogleMaps
+import AddressBookUI
 
 class CreateMeetController : FormViewController, CLLocationManagerDelegate {
     
-    var currentPosition: CLLocationCoordinate2D?
+    var meetTimestamp = NSDate()
+    
+    var currentLocInfo: Util.LocationInfo?
+    
+    var selectedLocationInfo: Util.LocationInfo?
+    
+    var locationSpinner: UIActivityIndicatorView?
     
     var newMeetId: String?
     
@@ -30,30 +38,77 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
     var activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
     
     
-    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if (self.currentPosition == nil) {
-            self.currentPosition = manager.location!.coordinate
+    func reverseGeocoding(latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        
+        print("REVERSE GEOENCODING")
+        
+        CLGeocoder().reverseGeocodeLocation(location, completionHandler: {(placemarks, error) -> Void in
+            var address = ""
+            var name = ""
             let locRow: ButtonRow = self.form.rowByTag("Location")!
-            locRow.value = "\(self.currentPosition!.latitude), \(self.currentPosition!.longitude)"
-            locRow.title = "\(self.currentPosition!.latitude), \(self.currentPosition!.longitude)"
-            print("set the title! for location row \(self.currentPosition!)!")
-            locRow.reload()
+            
+            if error != nil {
+                print(error)
+                
+                // tell user that current location information could not be retreived.
+                locRow.title = "Could not find current location"
+                return
+                
+            } else if placemarks?.count > 0 {
+                let pm = placemarks![0]
+                address = ABCreateStringWithAddressDictionary(pm.addressDictionary!, false)
+                if pm.areasOfInterest?.count > 0 {
+                    name = (pm.areasOfInterest?[0])!
+                } else {
+                    //print("No area of interest found.")
+                }
+            }
+            
+            // setting current location:
+            self.currentLocInfo = Util.LocationInfo()
+            self.currentLocInfo!.name = name
+            self.currentLocInfo!.address = address
+            self.currentLocInfo!.coords = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            
+            // now updating the location row:
+            locRow.title = address
+            locRow.value = address
+            
+            print("address: \(address)")
+            print("name: \(name)")
+            
+            locRow.updateCell()
+        })
+        
+        // stop the spinner:
+        self.locationSpinner!.hidden = true
+    }
+    
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if (self.currentLocInfo == nil) {
+            let currentPosition = manager.location!.coordinate
+            
+             // now making a call with the current coordinates to obtain the address for this location:
+            
+            //self.reverseGeocoding((currentPosition.latitude), longitude: (currentPosition.longitude))
+            let lat = CLLocationDegrees(33.783766033)
+            let long = CLLocationDegrees(-84.3979370)
+            self.reverseGeocoding((lat), longitude: long)
+            
         } else {
             // do nothing: currentPosition is already set.
         }
     }
     
+    // when location manager fails:
+    func locationManager(manager: CLLocationManager, didFailWithError error: NSError) {
+        print("loc failed! \(error.localizedDescription)")
+    }
+    
     // set the meetId for the meetController...
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
-        // display the tabBar at the bottom now:
-        self.tabBarController?.tabBar.hidden = false
-        
-        
-        if let locationController = segue.destinationViewController as? LocationSelectionViewController {
-            locationController.initialCoords = self.currentPosition
-        }
-        
+
         if let meetNavController = segue.destinationViewController as? MeetChatNavController {
             let meetController = meetNavController.viewControllers.first as! MeetChatPageViewController
             meetController.meetId = self.newMeetId!
@@ -109,6 +164,7 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
         
         
         // START-TIME:
+        let day = values["Day"]! as! String!
         
         if values["StartTime"]! == nil {
             pass = false
@@ -117,8 +173,20 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
             let startTime = values["StartTime"]! as! NSDate!
             let currDate = NSDate()
             
+            if (day == "today") {
+                self.meetTimestamp = startTime
+            } else {
+                let allUnits = NSCalendarUnit(rawValue: UInt.max)
+                let startTimeComponents = NSCalendar.currentCalendar().components(allUnits, fromDate: startTime)
+                
+                startTimeComponents.day = startTimeComponents.day + 1
+                
+                let calendar = NSCalendar.currentCalendar()
+                self.meetTimestamp = calendar.dateFromComponents(startTimeComponents)!
+            }
+
             // this means that the startTime has passed!
-            if currDate.compare(startTime) == NSComparisonResult.OrderedDescending {
+            if currDate.compare(meetTimestamp) == NSComparisonResult.OrderedDescending {
                 pass = false
                 messages += "Start Time has already passed.\n"
             }
@@ -133,13 +201,14 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
         }
         
         // LOCATION:
-        if self.currentPosition == nil {
-            print("currentPosition: \(self.currentPosition)")
-            pass = false
-            messages += "Location not set\n"
+        
+        // need to make sure lat, long points exist:
+        pass = false
+        if ((self.currentLocInfo != nil) && (self.currentLocInfo?.coords != nil)) {
+            pass = true
         }
         
-        
+
         // ========================================== NOW submitting to server / displaying error ==========================================:
         // if pass:
         // send request via Alamofire to the server, and do the loading shenanigans.
@@ -154,7 +223,6 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
             print("maxAttendees: \(values["MaxAttendees"])")
             print("startTime: \(values["StartTime"])")
             print("duration: \(values["Duration"])")
-            print("location: \(self.currentPosition)")
             
             
             // make the call:
@@ -167,9 +235,11 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
                     "description": values["Description"]! as! String!,
                     "maxAttendees": values["MaxAttendees"]! as! String!,
                     "duration": values["Duration"]! as! Int!,
-                    "startTime": values["StartTime"]! as! NSDate!,
-                    "lat": Double((self.currentPosition?.latitude)!),
-                    "long": Double((self.currentPosition?.longitude)!)
+                    "timestamp": self.meetTimestamp,
+                    "loc.lat": (self.currentLocInfo!.coords?.latitude)!,
+                    "loc.long": (self.currentLocInfo!.coords?.longitude)!,
+                    "loc.name": self.currentLocInfo!.name!,
+                    "loc.address": self.currentLocInfo!.address!
                 ])
                 .responseJSON { response in
                 
@@ -195,7 +265,7 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
                         self.newMeetId = JSON["savedMeetId"]! as! String!
                         
                         // programmatically seguing to the meetController to render the just created meet:
-                        self.performSegueWithIdentifier("NewMeetSegue", sender: nil)
+                        //self.performSegueWithIdentifier("NewMeetSegue", sender: nil)
                     }
                 }
             }
@@ -233,28 +303,48 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // hiding bottom tabBar:
-        self.tabBarController?.tabBar.hidden = true
-        
-        // location stuffs:
-        // Ask for Authorisation from the User.
-        self.locationManager.requestAlwaysAuthorization()
-        
         // For use in foreground
         self.locationManager.requestWhenInUseAuthorization()
         
+        // spinner for the location row:
+        locationSpinner = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
+        
+        locationSpinner!.color = UIColor.orangeColor()
+        locationSpinner!.startAnimating()
+        
+    
         if CLLocationManager.locationServicesEnabled() {
             locationManager.delegate = self
             locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
             locationManager.startUpdatingLocation()
+            print("locationManager stuff set in viewdidLoad()")
         }
+        
         
         // form stuffs:
         self.form +++= Section("About")
         
             <<< TextRow("Title") {
                 $0.placeholder = "Title"
+            }.cellSetup { cell, row in
+                //cell.backgroundColor = UIColor.orangeColor()
+                cell.layer.borderWidth = 1.0
+                cell.layer.cornerRadius = 5.0
+                cell.textField.delegate = TitleTextFieldDelegate()
+            }.onChange { [weak self] row in
+                    //print("description change: \(row.value!.characters.count)")
+                    if row.value != nil {
+                        if row.value!.characters.count > 12 {
+//                            let index = row.value!.startIndex.advancedBy(40)
+//                            row.value = row.value!.substringToIndex(index);
+//                            print("modified row: \(row.value)")
+                            row.cell.layer.borderColor = UIColor.redColor().CGColor
+                        } else {
+                            row.cell.layer.borderColor = UIColor.lightGrayColor().CGColor
+                        }
+                    }
             }
+            
     
             <<< TextAreaRow("Description") {
                 $0.placeholder = "Description"
@@ -278,6 +368,12 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
 
         self.form +++= Section("When")
             
+            <<< SegmentedRow<String>("Day") {
+                $0.title = "Which day: "
+                $0.options = ["today", "tomorrow"]
+                $0.value = "today"
+            }
+            
             <<< TimeRow("StartTime") {
                 $0.title = "Start Time: "
             }
@@ -291,13 +387,49 @@ class CreateMeetController : FormViewController, CLLocationManagerDelegate {
         self.form +++= Section("Where")
         
             <<< ButtonRow("Location") { row in
-                if self.currentPosition == nil {
-                    //row.title = "Current Location"
-                } else {
-                    //row.title = "Location: long: \(String(self.currentPosition!.latitude)) lat: \(String(self.currentPosition?.longitude))"
-                }
-        
+                
+                locationSpinner!.center = row.cell.contentView.center
+                row.cell.contentView.addSubview(locationSpinner!)
+                
+                
                 row.presentationMode = .SegueName(segueName: "SelectLocationSegue", completionCallback:{  vc in vc.dismissViewControllerAnimated(true, completion: nil) })
             }
+    }
+}
+
+class TitleTextFieldDelegate: NSObject, UITextFieldDelegate {
+    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+        print("textFieldFunc!!!")
+        guard let text = textField.text else { return true }
+        let newLength = text.utf16.count + string.utf16.count - range.length
+        return newLength <= 10 // Bool
+    }
+    
+    func textFieldDidBeginEditing(textField: UITextField!) {    //delegate method
+        print("text field begin editing")
+    }
+    
+    func textFieldShouldEndEditing(textField: UITextField!) -> Bool {  //delegate method
+        print("textFieldShouldEndEditin")
+        return false
+    }
+    
+    func textFieldShouldReturn(textField: UITextField!) -> Bool {   //delegate method
+        print("textFieldShouldReturn")
+        textField.resignFirstResponder()
+        
+        return true
+    }
+}
+
+class DescriptionTextFieldDelegate: NSObject, UITextFieldDelegate {
+    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+        
+        let currentCharacterCount = textField.text?.characters.count ?? 0
+        if (range.length + range.location > currentCharacterCount){
+            return false
+        }
+        let newLength = currentCharacterCount + string.characters.count - range.length
+        return newLength <= 25
     }
 }

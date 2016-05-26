@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import MapKit
 
 class Util {
     
@@ -26,5 +27,11 @@ class Util {
                 avatarImage.clipsToBounds = true
             });
         }
+    }
+    
+    class LocationInfo: NSObject {
+        var name: String?
+        var coords: CLLocationCoordinate2D?
+        var address: String?
     }
 }

@@ -22,6 +22,9 @@ class MeetsViewController: UITableViewController {
     var start = 0
     var count = 10
     
+    // used for transitions triggered by clicking on a user meet in the UpcomingCell (first Cell of this TableView)
+    var userMeetId: String?
+    
     @IBAction func chat(sender: UIBarButtonItem) {
         let poop = self.navigationController?.parentViewController as? MainController
         poop!.programmaticallyMoveToPage(2, direction: UIPageViewControllerNavigationDirection.Forward)
@@ -37,6 +40,7 @@ class MeetsViewController: UITableViewController {
         self.refreshControl?.beginRefreshing()
         self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
     }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         print("MEETS VIEW CONTROLLER")
@@ -77,16 +81,32 @@ class MeetsViewController: UITableViewController {
     
     // MARK: - Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if let meetChatNavController = segue.destinationViewController as? MeetChatNavController {
-            
-            if let index = self.tableView.indexPathForSelectedRow?.row {
-                let meetId = meets![index]["_id"]! as! String!  // getting the meetId for the selected meet.
+        
+        
+        if (segue.identifier == "UserMeetSegue") {
+            if let meetChatNavController = segue.destinationViewController as? MeetChatNavController {
+                
                 let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
                 
-                print("seguing to meetChatController: \(meetId)")
-                meetChatController.meetId = meetId
+                print("seguing to meetChatController view UserMeets:: \(userMeetId)")
+                meetChatController.meetId = userMeetId!
                 meetChatController.from = "Meets"
                 meetChatController.mode = "Meet"
+            }
+
+        } else {
+            
+            if let meetChatNavController = segue.destinationViewController as? MeetChatNavController {
+                
+                if let index = self.tableView.indexPathForSelectedRow?.row {
+                    let meetId = meets![index]["_id"]! as! String!  // getting the meetId for the selected meet.
+                    let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
+                    
+                    print("seguing to meetChatController: \(meetId)")
+                    meetChatController.meetId = meetId
+                    meetChatController.from = "Meets"
+                    meetChatController.mode = "Meet"
+                }
             }
         }
     }
@@ -100,14 +120,16 @@ class MeetsViewController: UITableViewController {
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Potentially incomplete method implementation.
         // Return the number of sections.
-        return 2
+        return 3
     }
     
     override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if (section == 0) {
-            return "Upcoming"
+            return "Joined"
+        } else if (section == 1){
+            return "Today's meets"
         } else {
-            return "All"
+            return "Tomorrow's meets"
         }
     }
 
@@ -130,6 +152,14 @@ class MeetsViewController: UITableViewController {
         
         if (indexPath.section == 0) {
             let cell = tableView.dequeueReusableCellWithIdentifier("UpcomingCell") as! UpcomingCell
+            
+            // giving cell all of the upcoming meets:
+            print("SETTINGS CELL.MEETS()!! \(self.meets?.count)")
+            cell.meets = self.meets
+            cell.reloadData()
+            
+            // setting reference to self so that cell can initiate transitions to other controllers via ref.
+            cell.parentTableViewController = self 
             return cell
         }
         

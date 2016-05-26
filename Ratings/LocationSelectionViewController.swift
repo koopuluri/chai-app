@@ -76,7 +76,7 @@ class LocationSelectionViewController: UIViewController, CLLocationManagerDelega
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if let createMeetController = segue.destinationViewController as? CreateMeetController {
             print("Going back to CreateMeetController!")
-            createMeetController.currentPosition = self.selectedCoords
+            //createMeetController.currentPosition = self.selectedCoords
             
         }
     }

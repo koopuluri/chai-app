@@ -7,8 +7,14 @@
 //
 
 import UIKit
+import Alamofire
 
 class UpcomingCell: UITableViewCell {
+    
+    var parentTableViewController: MeetsViewController?
+    
+    @IBOutlet weak var collectionView: UICollectionView!
+    var meets: NSMutableArray?
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -18,12 +24,42 @@ class UpcomingCell: UITableViewCell {
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
     }
+    
+    func reloadData() {
+        self.collectionView.reloadData()
+    }
 }
+
 
 extension UpcomingCell : UICollectionViewDataSource {
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 12
+        if ((self.meets) != nil) {
+            print("UpcomingCell number of meets: \(self.meets!.count)")
+            return self.meets!.count
+        } else {
+            return 0
+        }
+    }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        print("collectionView click: \(indexPath)")
+//        let meetChatNavController = MeetChatNavController()
+//        let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
+//        
+//        // setting up required attributes for meetChatController:
+//        meetChatController.meetId = meets![indexPath.row]["_id"]! as! String!
+//        meetChatController.from = "Meets"
+//        meetChatController.mode = "Meet"
+//        
+        
+        
+        // let's see how this works!??
+        //self.parentTableViewController?.navigationController?.pushViewController(meetChatNavController, animated: true)
+        
+        self.parentTableViewController!.userMeetId = meets![indexPath.row]["_id"]! as! String!
+        self.parentTableViewController?.performSegueWithIdentifier("UserMeetSegue", sender: self.parentTableViewController)
+        
     }
     
 
