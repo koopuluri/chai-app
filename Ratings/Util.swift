@@ -29,6 +29,18 @@ class Util {
         }
     }
     
+    static func convertUTCTimestampToDate(timestamp: String?) -> NSDate{
+        var formatter = NSDateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        formatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        let utcDate = formatter.dateFromString(timestamp!)
+        
+        // now converting to local date:
+        let tz = NSTimeZone.localTimeZone()
+        let seconds = tz.secondsFromGMTForDate(utcDate!)
+        return utcDate!.dateByAddingTimeInterval(NSTimeInterval(seconds))
+    }
+    
     class LocationInfo: NSObject {
         var name: String?
         var coords: CLLocationCoordinate2D?

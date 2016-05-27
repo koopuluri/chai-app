@@ -14,8 +14,10 @@ class UpcomingCell: UITableViewCell {
     var parentTableViewController: MeetsViewController?
     
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var spinner: UIActivityIndicatorView!
+    
     var meets: NSMutableArray?
-
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
@@ -27,6 +29,16 @@ class UpcomingCell: UITableViewCell {
     
     func reloadData() {
         self.collectionView.reloadData()
+    }
+    
+    func startLoading() {
+        spinner.hidden = false
+        spinner.startAnimating()
+    }
+    
+    func stopLoading() {
+        spinner.hidden = true
+        spinner.stopAnimating()
     }
 }
 
@@ -44,20 +56,10 @@ extension UpcomingCell : UICollectionViewDataSource {
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         print("collectionView click: \(indexPath)")
-//        let meetChatNavController = MeetChatNavController()
-//        let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
-//        
-//        // setting up required attributes for meetChatController:
-//        meetChatController.meetId = meets![indexPath.row]["_id"]! as! String!
-//        meetChatController.from = "Meets"
-//        meetChatController.mode = "Meet"
-//        
         
+        self.parentTableViewController!.userMeetId = meets![indexPath.row]["meet"]!!["_id"]! as! String!
+        print("UpcomingCell meet selected: \(self.parentTableViewController!.userMeetId)")
         
-        // let's see how this works!??
-        //self.parentTableViewController?.navigationController?.pushViewController(meetChatNavController, animated: true)
-        
-        self.parentTableViewController!.userMeetId = meets![indexPath.row]["_id"]! as! String!
         self.parentTableViewController?.performSegueWithIdentifier("UserMeetSegue", sender: self.parentTableViewController)
         
     }
@@ -69,21 +71,22 @@ extension UpcomingCell : UICollectionViewDataSource {
         cell.backgroundColor = UIColor.orangeColor()
         cell.layer.cornerRadius = 5.0
         
+        let meet = self.meets![indexPath.row]
+        
         // setting values for the cell (currently dummy, change later):
         if let titleLabel = cell.viewWithTag(100) as? UILabel {
-            titleLabel.text = "Chai pe Charcha"
+            print("setting upcoming meet title: \(meet["meet"]!!["title"]! as! String!)")
+            titleLabel.text = meet["meet"]!!["title"]! as! String!
         }
         
         if let timeLabel = cell.viewWithTag(101) as? UILabel {
             
-            // converting the default time to: "today at 4:30pm" / "tomorrow at 3pm" format.
-            let diceRoll = Int(arc4random_uniform(6) + 1)
-            if (diceRoll <= 3) {
-                //timeLabel.text = (meet["startTime"]! as! String!)
-                timeLabel.text = "4pm"
-            } else {
-                timeLabel.text = "3:30pm"
-            }
+            let meetTime = Util.convertUTCTimestampToDate(meet["startTime"]! as! String!)
+            
+            // now getting just the time from this:
+            let allUnits = NSCalendarUnit(rawValue: UInt.max)
+            let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
+            timeLabel.text = String(comps.hour) + ":" + String(comps.minute)
         }
         
         return cell

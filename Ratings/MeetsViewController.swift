@@ -8,22 +8,36 @@
 
 import UIKit
 import Alamofire
+import MapKit
 
 import FBSDKLoginKit
 import FBSDKCoreKit
 
 
-class MeetsViewController: UITableViewController {
+class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
 
     // to have access to parent pageViewController for page shift on button press
     var parentPageViewController: MainController?
     
     var meets: NSMutableArray?
+    
+    var todayMeets: NSMutableArray?
+    var tomorrowMeets: NSMutableArray?
+    
     var start = 0
     var count = 10
     
+    var currentLocation: CLLocationCoordinate2D?
+    
+    // location manager used to grab user's current location
+    var locationManager = CLLocationManager()
+    
     // used for transitions triggered by clicking on a user meet in the UpcomingCell (first Cell of this TableView)
     var userMeetId: String?
+    
+    // keeps track of loading of user meets:
+    var userMeetsLoading = true
+    var userMeets: NSMutableArray?
     
     @IBAction func chat(sender: UIBarButtonItem) {
         let poop = self.navigationController?.parentViewController as? MainController
@@ -41,13 +55,41 @@ class MeetsViewController: UITableViewController {
         self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
     }
     
+    // grab user current location:
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if (self.currentLocation == nil) {
+            self.currentLocation = manager.location!.coordinate
+            
+            // need to start refresh():
+            print("found current location, now fetching meets!")
+            fetchMeets()
+            
+        } else {
+            // do nothing: currentLocationis already set.
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         print("MEETS VIEW CONTROLLER")
+        
+        // setting the location manager stuff:
+        self.locationManager.requestWhenInUseAuthorization()
+        
+        if CLLocationManager.locationServicesEnabled() {
+            locationManager.delegate = self
+            locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            locationManager.startUpdatingLocation()
+            print("locationManager stuff set in viewdidLoad()")
+        }
+        
+        self.todayMeets = NSMutableArray()
+        self.tomorrowMeets = NSMutableArray()
+        
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         startRefresh()
-        
         self.navigationController!.navigationBar.barTintColor = UIColor.orangeColor()
+        
     }
     
     // ==========================================================================
@@ -57,24 +99,68 @@ class MeetsViewController: UITableViewController {
         self.tabBarController?.tabBar.hidden = false
     }
     
-    func handleRefresh(refreshControl: UIRefreshControl) {
-        // get current location to use for the query:
-        // TODO: currently using dummy:
-        var currentLocation = [0.0, 0.0]
-        
-        // Pulling meets from the server:
-        let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(currentLocation[0])&lat=\(currentLocation[1])&start=\(start)&count=\(count)&accessToken=poop"
-        
-        print("reloadMeetsFromServer: \(url)")
-        
-        Alamofire.request(.GET, url) .responseJSON { response in
+    
+    // if user's current location set, goes and fetches meets in the area:
+    func fetchMeets() {
+        if (self.currentLocation != nil) {
+            // Pulling meets from the server:
+            let lat: String = "\(self.currentLocation!.latitude)"
+            let long: String = "\(self.currentLocation!.longitude)"
+            let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(long)&lat=\(lat)&start=\(start)&count=\(count)&accessToken=poop"
             
-            if let JSON = response.result.value {
-                self.meets = JSON["meets"] as? NSMutableArray
-                self.tableView.reloadData()
-                self.refreshControl?.endRefreshing()
+            print("reloadMeetsFromServer: \(url)")
+            
+            Alamofire.request(.GET, url) .responseJSON { response in
+                
+                if let JSON = response.result.value {
+                    let meets = JSON["meets"] as? NSMutableArray
+                    
+                    for meet in (meets! as NSArray as! [AnyObject]) {
+                        
+                        let meetTimeString = meet["startTime"]! as! String!
+                        let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
+
+                        // if today, add to today's list, else tomorrow's:
+                        let isToday = NSCalendar.currentCalendar().isDateInToday(meetTime)
+                        if (isToday) {
+                            print("it's today!")
+                            self.todayMeets?.addObject(meet)
+                            print("updated today mees: \(self.todayMeets!.count)")
+                        } else {
+                            print("it's tomorrow!")
+                            self.tomorrowMeets?.addObject(meet)
+                        }
+                    }
+                    
+                    self.tableView.reloadData()
+                    self.refreshControl?.endRefreshing()
+                }
             }
         }
+    }
+    
+    // fetches all of the users meets (joined / hosting) that are upcoming:
+    func fetchUserUpcomingMeets() {
+        let url = "https://one-mile.herokuapp.com/user_upcoming_meets?accessToken=poop"
+        
+        self.userMeetsLoading = true
+        
+        Alamofire.request(.GET, url) .responseJSON { response in
+            if let JSON = response.result.value {
+                self.userMeets = JSON["userMeets"] as? NSMutableArray
+                //print("obtained userMeets! \(self.userMeets!.count)")
+                self.userMeetsLoading = false
+                
+                // reloading the UpcomingMeets cell:
+                self.tableView.reloadRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: UITableViewRowAnimation.None)
+            }
+        }
+    }
+    
+    
+    func handleRefresh(refreshControl: UIRefreshControl) {
+        fetchMeets()
+        fetchUserUpcomingMeets()
     }
     
     @IBAction func unwindMeets(segue: UIStoryboardSegue) {}
@@ -93,24 +179,35 @@ class MeetsViewController: UITableViewController {
                 meetChatController.from = "Meets"
                 meetChatController.mode = "Meet"
             }
-
+            
         } else {
             
             if let meetChatNavController = segue.destinationViewController as? MeetChatNavController {
                 
                 if let index = self.tableView.indexPathForSelectedRow?.row {
-                    let meetId = meets![index]["_id"]! as! String!  // getting the meetId for the selected meet.
-                    let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
-                    
-                    print("seguing to meetChatController: \(meetId)")
-                    meetChatController.meetId = meetId
-                    meetChatController.from = "Meets"
-                    meetChatController.mode = "Meet"
+                    if let section = self.tableView.indexPathForSelectedRow?.section {
+                        
+                        var meetId: String?
+                        if (section == 1) {
+                            meetId = self.todayMeets![index]["_id"]! as! String!  // getting the meetId for the selected meet.
+                        }
+                        else if (section == 2){
+                            meetId = self.tomorrowMeets![index]["_id"] as! String!
+                        } else {
+                            // woah there
+                        }
+                        let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
+                        
+                        print("seguing to meetChatController: \(meetId)")
+                        meetChatController.meetId = meetId
+                        meetChatController.from = "Meets"
+                        meetChatController.mode = "Meet"
+                    }
                 }
             }
         }
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -125,7 +222,7 @@ class MeetsViewController: UITableViewController {
     
     override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if (section == 0) {
-            return "Joined"
+            return "My upcoming meets"
         } else if (section == 1){
             return "Today's meets"
         } else {
@@ -138,12 +235,17 @@ class MeetsViewController: UITableViewController {
         // Return the number of rows in the section.
         if (section == 0) {
             return 1
-        } else {
-            // this is for the "all" section:
-            if self.meets == nil {
-                return 0
+        } else if (section == 1) {
+            if (self.todayMeets != nil) {
+                return self.todayMeets!.count
             } else {
-                return self.meets!.count
+                return 0
+            }
+        } else {
+            if (self.tomorrowMeets != nil) {
+                return self.tomorrowMeets!.count
+            } else {
+                return 0
             }
         }
     }
@@ -153,19 +255,32 @@ class MeetsViewController: UITableViewController {
         if (indexPath.section == 0) {
             let cell = tableView.dequeueReusableCellWithIdentifier("UpcomingCell") as! UpcomingCell
             
-            // giving cell all of the upcoming meets:
-            print("SETTINGS CELL.MEETS()!! \(self.meets?.count)")
-            cell.meets = self.meets
-            cell.reloadData()
-            
             // setting reference to self so that cell can initiate transitions to other controllers via ref.
-            cell.parentTableViewController = self 
+            cell.parentTableViewController = self
+            
+            
+            if (self.userMeetsLoading) {
+                cell.startLoading()
+            } else {
+                // stoppin gthe loading:
+                cell.stopLoading()
+                
+                // giving cell all of the upcoming meets:
+                cell.meets = self.userMeets
+                cell.reloadData()
+            }
+
             return cell
         }
         
         let cell = tableView.dequeueReusableCellWithIdentifier("MeetCell", forIndexPath: indexPath)
     
-        let meet = meets![indexPath.row]
+        var meet: AnyObject!
+        if (indexPath.section == 1) {
+            meet = todayMeets![indexPath.row]
+        } else if (indexPath.section == 2) {
+            meet = tomorrowMeets![indexPath.row]
+        }
         
         if let titleLabel = cell.viewWithTag(100) as? UILabel {
             titleLabel.text = (meet["title"]! as! String!)
@@ -178,13 +293,16 @@ class MeetsViewController: UITableViewController {
         
         if let timeLabel = cell.viewWithTag(102) as? UILabel {
             
-            // converting the default time to: "today at 4:30pm" / "tomorrow at 3pm" format.
-            let diceRoll = Int(arc4random_uniform(6) + 1)
-            if (diceRoll <= 3) {
-                //timeLabel.text = (meet["startTime"]! as! String!)
-                timeLabel.text = "4pm today"
-            } else {
-                timeLabel.text = "3:30pm tomorrow"
+            let meetTimeString = meet["startTime"]! as! String!
+            let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
+            
+            // getting hour and mins:
+            let allUnits = NSCalendarUnit(rawValue: UInt.max)
+            let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
+            if (indexPath.section == 1) {
+                timeLabel.text = String(comps.hour) + ":" + String(comps.minute) + " today"
+            } else if (indexPath.section == 2) {
+                timeLabel.text = String(comps.hour) + ":" + String(comps.minute) + " tomorrow"
             }
         }
         

@@ -44,6 +44,8 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     // location manager used to grab user's current location
     var locationManager = CLLocationManager()
     
+    // new meet id (if creating meet was successful)
+    var newMeetId: String?
     
     // FORM TOGGLING:
     func _toggleForm(val: Bool) {
@@ -158,8 +160,8 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
                     if (JSON["error"]! != nil) {
                         
                         // replacing the loading spinner with the submit button again:
-                        let submitButtonItem = UIBarButtonItem(title: "Submit", style: .Plain, target: self, action: "submit:")
-                        self.navigationItem.rightBarButtonItem? = submitButtonItem
+                        self.submitSpinner.hidden = true
+                        self.submitButton.hidden = false
                         
                         // un-disabling the form:
                         self.enableForm()
@@ -170,11 +172,10 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
                         self.presentViewController(alert, animated: true, completion: nil)
                     } else {
                         
-                        //let meetId = JSON["savedMeetId"]! as! String!
-                        print("successfuly created a meet!")
+                        self.newMeetId = JSON["savedMeetId"]! as! String!
                         
                         // programmatically seguing to the meetController to render the just created meet:
-                        //self.performSegueWithIdentifier("NewMeetSegue", sender: nil)
+                        self.performSegueWithIdentifier("NewMeetSegue", sender: self)
                     }
                 }
         }
@@ -297,6 +298,8 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         
         
         // setting the location manager stuff:
+        self.locationManager.requestWhenInUseAuthorization()
+        
         if CLLocationManager.locationServicesEnabled() {
             locationManager.delegate = self
             locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
@@ -354,6 +357,16 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         // tableView:
         tableView.backgroundColor = UIColor.orangeColor()
         
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if let meetChatNavController = segue.destinationViewController as? MeetChatNavController {
+            let meetChatController = meetChatNavController.viewControllers.first as! MeetChatPageViewController
+            print("seguing to meetChatController view UserMeets:: \(newMeetId)")
+            meetChatController.meetId = newMeetId!
+            meetChatController.from = "Meets"
+            meetChatController.mode = "Meet"
+        }
     }
 }
 
