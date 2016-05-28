@@ -14,7 +14,6 @@ class Util {
     
     // sets the avatar image from the image url (picUrl) into the image view (avatarImage):
     static func setAvatarImage(picUrl: String, avatarImage: UIImageView) {
-        
         let url = NSURL(string: picUrl)
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
             let data = NSData(contentsOfURL: url!) //make sure your image in this url does exist, otherwise unwrap in a if let check
@@ -29,16 +28,28 @@ class Util {
         }
     }
     
+    static func getTimeString(hour: Int, min: Int) -> String {
+        var minString = String(min)
+        if (minString.characters.count == 1) {
+            // need to pre-pend a 0:
+            minString = "0" + minString
+        }
+        
+        return String(hour) + ":" + minString
+    }
+    
+    
     static func convertUTCTimestampToDate(timestamp: String?) -> NSDate{
         var formatter = NSDateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         formatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         let utcDate = formatter.dateFromString(timestamp!)
+        return utcDate!
         
         // now converting to local date:
-        let tz = NSTimeZone.localTimeZone()
-        let seconds = tz.secondsFromGMTForDate(utcDate!)
-        return utcDate!.dateByAddingTimeInterval(NSTimeInterval(seconds))
+//        let tz = NSTimeZone.localTimeZone()
+//        let seconds = tz.secondsFromGMTForDate(utcDate!)
+//        return utcDate!.dateByAddingTimeInterval(NSTimeInterval(seconds))
     }
     
     class LocationInfo: NSObject {

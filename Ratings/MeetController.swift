@@ -180,10 +180,13 @@ class MeetController: UITableViewController {
  
             cell.titleLabel.text = title
             cell.hostLabel.text = hostName
-            cell.timeLabel.text = "3:30pm"
+            
+            
+            
+            cell.timeLabel.text =
             cell.durationLabel.text = "duration: 1hr"
+            
             cell.descriptionLabel.text = description
-
 
             let url = NSURL(string: picUrl)
             
@@ -262,19 +265,7 @@ extension MeetController: UICollectionViewDelegate, UICollectionViewDataSource {
         if let avatarImage = cell.viewWithTag(101) as? UIImageView {
             let picUrl = "https://scontent.xx.fbcdn.net/hprofile-xpf1/v/t1.0-1/p50x50/12509882_565775596928323_668499748259808876_n.jpg?oh=4733ef1dc8bc40849533f84e82e8a5a3&oe=57BA0EA0"
             
-            let url = NSURL(string: picUrl)
-            
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-                let data = NSData(contentsOfURL: url!) //make sure your image in this url does exist, otherwise unwrap in a if let check
-                dispatch_async(dispatch_get_main_queue(), {
-                    avatarImage.image = UIImage(data: data!)
-                    avatarImage.layer.borderWidth = 0.5
-                    avatarImage.layer.masksToBounds = false
-                    avatarImage.layer.borderColor = UIColor.lightGrayColor().CGColor
-                    avatarImage.layer.cornerRadius = avatarImage.frame.height/2
-                    avatarImage.clipsToBounds = true
-                });
-            }
+            Util.setAvatarImage(picUrl, avatarImage: avatarImage)
         }
         
         return cell

@@ -86,7 +86,7 @@ extension UpcomingCell : UICollectionViewDataSource {
             // now getting just the time from this:
             let allUnits = NSCalendarUnit(rawValue: UInt.max)
             let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
-            timeLabel.text = String(comps.hour) + ":" + String(comps.minute)
+            timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
         }
         
         return cell

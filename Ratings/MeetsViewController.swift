@@ -15,7 +15,7 @@ import FBSDKCoreKit
 
 
 class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
-
+    
     // to have access to parent pageViewController for page shift on button press
     var parentPageViewController: MainController?
     
@@ -63,7 +63,6 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             // need to start refresh():
             print("found current location, now fetching meets!")
             fetchMeets()
-            
         } else {
             // do nothing: currentLocationis already set.
         }
@@ -71,7 +70,6 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("MEETS VIEW CONTROLLER")
         
         // setting the location manager stuff:
         self.locationManager.requestWhenInUseAuthorization()
@@ -89,8 +87,8 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         startRefresh()
         self.navigationController!.navigationBar.barTintColor = UIColor.orangeColor()
-        
     }
+    
     
     // ==========================================================================
     
@@ -108,36 +106,43 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             let long: String = "\(self.currentLocation!.longitude)"
             let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(long)&lat=\(lat)&start=\(start)&count=\(count)&accessToken=poop"
             
-            print("reloadMeetsFromServer: \(url)")
+            // reset today and tomorrow lists:
+            self.todayMeets = NSMutableArray()
+            self.tomorrowMeets = NSMutableArray()
             
+            print("reloadMeetsFromServer: \(url)")
             Alamofire.request(.GET, url) .responseJSON { response in
                 
                 if let JSON = response.result.value {
                     let meets = JSON["meets"] as? NSMutableArray
-                    
-                    for meet in (meets! as NSArray as! [AnyObject]) {
-                        
-                        let meetTimeString = meet["startTime"]! as! String!
-                        let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
-
-                        // if today, add to today's list, else tomorrow's:
-                        let isToday = NSCalendar.currentCalendar().isDateInToday(meetTime)
-                        if (isToday) {
-                            print("it's today!")
-                            self.todayMeets?.addObject(meet)
-                            print("updated today mees: \(self.todayMeets!.count)")
-                        } else {
-                            print("it's tomorrow!")
-                            self.tomorrowMeets?.addObject(meet)
+                    if (meets != nil) {
+                        for meet in (meets! as NSArray as! [AnyObject]) {
+                            
+                            let meetTimeString = meet["startTime"]! as! String!
+                            print("meettimeString: \(meetTimeString)")
+                            
+                            let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
+                            
+                            // if today, add to today's list, else tomorrow's:
+                            let isToday = NSCalendar.currentCalendar().isDateInToday(meetTime)
+                            if (isToday) {
+                                self.todayMeets!.addObject(meet)
+                                print("updated today meets: \(self.todayMeets!.count)")
+                            } else {
+                                self.tomorrowMeets!.addObject(meet)
+                                print("updated tomorrow's meets: \(self.tomorrowMeets!.count)")
+                            }
                         }
                     }
                     
+                    print("reloading data with the following: \(self.todayMeets!.count) ; \(self.tomorrowMeets!.count)")
                     self.tableView.reloadData()
                     self.refreshControl?.endRefreshing()
                 }
             }
         }
     }
+    
     
     // fetches all of the users meets (joined / hosting) that are upcoming:
     func fetchUserUpcomingMeets() {
@@ -258,7 +263,6 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             // setting reference to self so that cell can initiate transitions to other controllers via ref.
             cell.parentTableViewController = self
             
-            
             if (self.userMeetsLoading) {
                 cell.startLoading()
             } else {
@@ -279,6 +283,7 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         if (indexPath.section == 1) {
             meet = todayMeets![indexPath.row]
         } else if (indexPath.section == 2) {
+            print("cell fort tomorrow: \(indexPath.row)")
             meet = tomorrowMeets![indexPath.row]
         }
         
@@ -300,28 +305,15 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             let allUnits = NSCalendarUnit(rawValue: UInt.max)
             let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
             if (indexPath.section == 1) {
-                timeLabel.text = String(comps.hour) + ":" + String(comps.minute) + " today"
+                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute) + " today"
             } else if (indexPath.section == 2) {
-                timeLabel.text = String(comps.hour) + ":" + String(comps.minute) + " tomorrow"
+                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute) + " tomorrow"
             }
         }
         
         if let avatarImage = cell.viewWithTag(104) as? UIImageView {
             let picUrl = "https://scontent.xx.fbcdn.net/hprofile-xpf1/v/t1.0-1/p50x50/12509882_565775596928323_668499748259808876_n.jpg?oh=4733ef1dc8bc40849533f84e82e8a5a3&oe=57BA0EA0"
-            
-            let url = NSURL(string: picUrl)
-            
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-                let data = NSData(contentsOfURL: url!) //make sure your image in this url does exist, otherwise unwrap in a if let check
-                dispatch_async(dispatch_get_main_queue(), {
-                    avatarImage.image = UIImage(data: data!)
-                    avatarImage.layer.borderWidth = 0.5
-                    avatarImage.layer.masksToBounds = false
-                    avatarImage.layer.borderColor = UIColor.lightGrayColor().CGColor
-                    avatarImage.layer.cornerRadius = avatarImage.frame.height/2
-                    avatarImage.clipsToBounds = true
-                });
-            }
+            Util.setAvatarImage(picUrl, avatarImage: avatarImage)
         }
         
         if let countLabel = cell.viewWithTag(103) as? UILabel {
@@ -332,50 +324,4 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         
         return cell 
     }
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        // Return NO if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == .Delete {
-            // Delete the row from the data source
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-        } else if editingStyle == .Insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(tableView: UITableView, moveRowAtIndexPath fromIndexPath: NSIndexPath, toIndexPath: NSIndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        // Return NO if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
