@@ -9,18 +9,27 @@
 import UIKit
 import Foundation
 import JSQMessagesViewController
+import Alamofire
 
 // extends JSQMessagesViewController to provide chat UI. 
 class MeetThreadViewController: JSQMessagesViewController{
+    
+    var start = 0
+    var count = 10
+    
+    var meetId: String?
+    
     let incomingBubble = JSQMessagesBubbleImageFactory().incomingMessagesBubbleImageWithColor(UIColor.orangeColor())
+    
     let outgoingBubble = JSQMessagesBubbleImageFactory().outgoingMessagesBubbleImageWithColor(UIColor.lightGrayColor())
+    
     var messages = [JSQMessage]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         self.setup()
-        self.addDemoMessages()
+        self.fetchMessages()
     }
     
     override func didReceiveMemoryWarning() {
@@ -31,34 +40,50 @@ class MeetThreadViewController: JSQMessagesViewController{
     func reloadMessagesView() {
         self.collectionView?.reloadData()
     }
+    
+    func fetchMessages() {
+        let url = "https://one-mile.herokuapp.com/meet_chat?meetId=\(self.meetId!)&accessToken=poop"
+        
+        Alamofire.request(.GET, url) .responseJSON { response in
+            
+            if let JSON = response.result.value {
+                
+                if (JSON["error"] != nil) {
+                    // handle this!
+                }
+                
+                // should be obtained in decreasing order of timestamp:
+                let chatMessages = JSON["meets"] as? NSMutableArray
+                
+                for message in (chatMessages! as NSArray as! [AnyObject]) {
+                    let messageTimeString = message["timestamp"]! as! String!
+                    print("messageTimestring: \(messageTimeString)")
+                    
+                    let messageTime = Util.convertUTCTimestampToDate(messageTimeString)
+                    let userId = message["createdBy"]!!["user"]!!["_id"]! as! String!
+                    let text = message["message"]! as! String!
+                    let username = message["createdBy"]!!["user"]!!["name"]! as! String!
+
+                    // now create a JSQMessage object and append to the messages list:
+                    self.messages.append(JSQMessage(senderId: userId, senderDisplayName: username, date: messageTime, text: text))
+                }
+                
+                // reload the messages:
+                self.reloadMessagesView()
+            }
+        }
+    }
 }
+
+
 
 //MARK - Setup
 extension MeetThreadViewController {
-    func addDemoMessages() {
-        
-        // adding some dummy messages:
-        self.messages = [
-            JSQMessage(senderId: "0", senderDisplayName: "Woah", date: NSDate(), text: "Hey! Looking forward to the meet!"),
-            JSQMessage(senderId: "1", senderDisplayName: "Abc", date: NSDate(), text: "Hey you!"),
-            JSQMessage(senderId: "2", senderDisplayName: "Albert Einstein", date: NSDate(), text: "How fast is hey?"),
-            JSQMessage(senderId: "3", senderDisplayName: "Ash Ketchum", date: NSDate(), text: "Hey! I choose you"),
-            JSQMessage(senderId: "4", senderDisplayName: "Abe Lincoln", date: NSDate(), text: "Can't wait to punch pillows."),
-            JSQMessage(senderId: "4", senderDisplayName: "Abe Lincoln", date: NSDate(), text: "What's up?"),
-            JSQMessage(senderId: "5", senderDisplayName: "Mahatma Gandhi", date: NSDate(), text: "I don't believe in punching anything."),
-            JSQMessage(senderId: "6", senderDisplayName: "Nicola Tesla", date: NSDate(), text: "... facepalm..."),
-            JSQMessage(senderId: "7", senderDisplayName: "Karthik", date: NSDate(), text: "I don't own any pillows :(")
-        ]
-        
-        // reloading to display the new messages:
-        self.reloadMessagesView()
-    }
+    
     
     func setup() {
         self.senderId = "0"
         self.senderDisplayName = "Karthik"
-//        self.senderId = UIDevice.currentDevice().identifierForVendor?.UUIDString
-//        self.senderDisplayName = UIDevice.currentDevice().identifierForVendor?.UUIDString
     }
     
     override func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -131,10 +156,18 @@ extension MeetThreadViewController {
         return nil
     }
     
+    func sendMesage(message: String?) {
+        print("sending message to the server: \(message)")
+    }
+    
     override func didPressSendButton(button: UIButton!, withMessageText text: String!, senderId: String!, senderDisplayName: String!, date: NSDate!) {
         let message = JSQMessage(senderId: senderId, senderDisplayName: senderDisplayName, date: date, text: text)
         self.messages += [message]
         self.finishSendingMessage()
+        
+        // making a call to the server:
+        self.sendMesage(text)
+
     }
     
     override func didPressAccessoryButton(sender: UIButton!) {

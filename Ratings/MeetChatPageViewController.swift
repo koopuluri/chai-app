@@ -102,13 +102,7 @@ class MeetChatPageViewController: UIPageViewController {
 
                         
                         // set the color of the navbar:
-                        if (!isHost) {
-                            // user is only attendee:
-                            self.navigationController!.navigationBar.barTintColor = UIColor.blueColor()
-                        } else {
-                            // user is a host:
-                            self.navigationController!.navigationBar.barTintColor = UIColor.greenColor()
-                        }
+                        self.navigationController!.navigationBar.barTintColor = Util.getMainColor()
                     } else {
                         
                         // startView controller is the meetController:
@@ -117,7 +111,6 @@ class MeetChatPageViewController: UIPageViewController {
                             direction: .Forward,
                             animated: true,
                             completion: nil)
-                        
                         
                         // user is not part of meet: ==> set joinButton, and reg. background color
                         self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()

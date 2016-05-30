@@ -22,9 +22,25 @@ class MeetInfoCell: UITableViewCell {
     @IBOutlet weak var timeLabel: UILabel!
     @IBOutlet weak var timeOuterView: UIView!
     
+    @IBOutlet weak var durationAndTimeOuterView: UIView!
+    @IBOutlet weak var durationOuterView: UIView!
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
+    }
+    
+    func setup() {
+        // set this outer view to be transparent:
+        self.durationAndTimeOuterView.alpha = 0.0
+        
+        self.timeOuterView.backgroundColor = UIColor.whiteColor()
+        self.timeOuterView.layer.cornerRadius = 5.0
+        
+        self.timeLabel.textColor = Util.getMainColor()
+        self.durationLabel.textColor = Util.getMainColor()
+        
+        self.durationOuterView.backgroundColor = UIColor.whiteColor()
+        self.durationOuterView.layer.cornerRadius = 5.0
     }
 
     override func setSelected(selected: Bool, animated: Bool) {
@@ -32,5 +48,4 @@ class MeetInfoCell: UITableViewCell {
 
         // Configure the view for the selected state
     }
-
 }

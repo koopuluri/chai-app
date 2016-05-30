@@ -234,6 +234,14 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             return "Tomorrow's meets"
         }
     }
+    
+    override func tableView(tableView: UITableView!, heightForRowAtIndexPath indexPath: NSIndexPath!) -> CGFloat {
+        if (indexPath.section == 1 || indexPath.section == 2) {
+            return 118.0
+        } else {
+            return 100.0
+        }
+    }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete method implementation.
@@ -305,11 +313,50 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             let allUnits = NSCalendarUnit(rawValue: UInt.max)
             let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
             if (indexPath.section == 1) {
-                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute) + " today"
+                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
             } else if (indexPath.section == 2) {
-                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute) + " tomorrow"
+                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
             }
+            
+            timeLabel.textColor = Util.getMainColor()
         }
+        
+        if let durationLabel = cell.viewWithTag(105) as? UILabel {
+            let duration = meet["duration"]! as! Int
+            print("obtained duration: \(duration)")
+            
+            // convert to human readable form:
+            let (h, m, _) = Util.secondsToHoursMinutesSeconds(duration)
+            
+            if (h != 0) {
+                if (m != 0) {
+                    durationLabel.text = "\(h)hr \(m)m"
+                } else {
+                    let end = (h == 1) ? "hr" : "hrs"
+                    durationLabel.text = "\(h)\(end)"
+                }
+            } else {
+                durationLabel.text = "\(m)m"
+            }
+            
+            durationLabel.textColor = Util.getMainColor()
+        }
+        
+        // now for the views that hold time and duration:
+        if let timeView = cell.viewWithTag(1) as? UIView! {
+            timeView.layer.borderWidth = 0.4
+            timeView.layer.borderColor = UIColor.lightGrayColor().CGColor
+            timeView.layer.cornerRadius = 5.0
+            timeView.backgroundColor = UIColor.whiteColor()
+        }
+        
+        if let durationView = cell.viewWithTag(2) as? UIView! {
+            durationView.layer.borderWidth = 0.4
+            durationView.layer.borderColor = UIColor.lightGrayColor().CGColor
+            durationView.layer.cornerRadius = 5.0
+            durationView.backgroundColor = UIColor.whiteColor()
+        }
+        
         
         if let avatarImage = cell.viewWithTag(104) as? UIImageView {
             let picUrl = "https://scontent.xx.fbcdn.net/hprofile-xpf1/v/t1.0-1/p50x50/12509882_565775596928323_668499748259808876_n.jpg?oh=4733ef1dc8bc40849533f84e82e8a5a3&oe=57BA0EA0"

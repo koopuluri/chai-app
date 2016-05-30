@@ -12,6 +12,42 @@ import MapKit
 
 class Util {
     
+    // obtained from: http://stackoverflow.com/a/26794841
+    static func secondsToHoursMinutesSeconds (seconds : Int) -> (Int, Int, Int) {
+        return (seconds / 3600, (seconds % 3600) / 60, (seconds % 3600) % 60)
+    }
+    
+    static func getMainColor() -> UIColor {
+        return Util.hexStringToUIColor("FF8000")
+    }
+    
+    static func getDurationText(seconds: Int) -> String {
+        return "hi"
+    }
+    
+    // obtained from: http://stackoverflow.com/a/27203691
+    static func hexStringToUIColor (hex:String) -> UIColor {
+        var cString:String = hex.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet() as NSCharacterSet).uppercaseString
+        
+        if (cString.hasPrefix("#")) {
+            cString = cString.substringFromIndex(cString.startIndex.advancedBy(1))
+        }
+        
+        if ((cString.characters.count) != 6) {
+            return UIColor.grayColor()
+        }
+        
+        var rgbValue:UInt32 = 0
+        NSScanner(string: cString).scanHexInt(&rgbValue)
+        
+        return UIColor(
+            red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+            green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+            blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+            alpha: CGFloat(1.0)
+        )
+    }
+    
     // sets the avatar image from the image url (picUrl) into the image view (avatarImage):
     static func setAvatarImage(picUrl: String, avatarImage: UIImageView) {
         let url = NSURL(string: picUrl)
@@ -38,6 +74,10 @@ class Util {
         return String(hour) + ":" + minString
     }
     
+    static func getComps(date: NSDate) -> NSDateComponents{
+        let allUnits = NSCalendarUnit(rawValue: UInt.max)
+        return NSCalendar.currentCalendar().components(allUnits, fromDate: date)
+    }
     
     static func convertUTCTimestampToDate(timestamp: String?) -> NSDate{
         var formatter = NSDateFormatter()
@@ -50,6 +90,28 @@ class Util {
 //        let tz = NSTimeZone.localTimeZone()
 //        let seconds = tz.secondsFromGMTForDate(utcDate!)
 //        return utcDate!.dateByAddingTimeInterval(NSTimeInterval(seconds))
+    }
+    
+    // height for a specific UILabel:
+    // http://stackoverflow.com/questions/25180443/adjust-uilabel-height-to-text
+    static func setHeightForLabel(text: String, label: UILabel, font: UIFont) -> CGFloat{
+        label.numberOfLines = 0
+        label.lineBreakMode = NSLineBreakMode.ByWordWrapping
+        label.font = font
+        label.text = text
+        label.sizeToFit()
+        return label.frame.height
+    }
+    
+    // calculate the height of a UILabel based on its contents:
+    func heightForView(text: String, font: UIFont, width: CGFloat) -> CGFloat{
+        let label:UILabel = UILabel(frame: CGRectMake(0, 0, width, CGFloat.max))
+        label.numberOfLines = 0
+        label.lineBreakMode = NSLineBreakMode.ByWordWrapping
+        label.font = font
+        label.text = text
+        label.sizeToFit()
+        return label.frame.height
     }
     
     class LocationInfo: NSObject {

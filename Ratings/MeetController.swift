@@ -21,8 +21,13 @@ class MeetController: UITableViewController {
     var isCurrentUserHost = false
     var isCurrentUserAttendee = false
     
+    // if loading, then spinner is displayed for the attendeeCell:
+    var isAttendeesLoading = true
+    
     // when true, loading spinner shown while making call to server to join the user to this meet:
     var isJoining = false
+    
+    var attendees: NSMutableArray?
     
     var people: [[UIColor]] = [
         [UIColor.redColor(), UIColor.redColor(), UIColor.redColor(), UIColor.redColor()],
@@ -49,6 +54,7 @@ class MeetController: UITableViewController {
         
         print("MeetController.viewDidLoad().meetId: \(self.meetId)")
         startRefresh()
+        fetchAttendees()
         // Do any additional setup after loading the view.
     }
     
@@ -58,10 +64,6 @@ class MeetController: UITableViewController {
         // reloading the MeetInfoCell and the DividerCell
         tableView.reloadSections(NSIndexSet(index: 1), withRowAnimation: .None)
         tableView.reloadSections(NSIndexSet(index: 2), withRowAnimation: .None)
-    }
-    
-    func joinMeet() {
-        print("MeetController.joinMeet")
     }
     
     func refresh() {
@@ -81,12 +83,28 @@ class MeetController: UITableViewController {
                     self.isCurrentUserAttendee = (JSON["isAttending"]! as! Bool!)
                     self.isCurrentUserHost = (JSON["isHost"]! as! Bool!)
                     self.setTheMeet()
-                    print("stopRefresh()")
                     self.stopRefresh()
                 }
             }
         } else {
             print("meetId is null!")
+        }
+    }
+    
+    func fetchAttendees() {
+        let url = "https://one-mile.herokuapp.com/meet_attendees?meetId=\(self.meetId!)&accessToken=poop"
+        print("fetchAttendees url: \(url)")
+        
+        self.isAttendeesLoading = true
+        Alamofire.request(.GET, url) .responseJSON { response in
+            if let JSON = response.result.value {
+                // TODO: handle the error case:
+                self.attendees = JSON["attendees"]! as! NSMutableArray!
+                self.isAttendeesLoading = false
+                
+                // reload the attendee section:
+                self.tableView.reloadSections(NSIndexSet(index: 3), withRowAnimation: UITableViewRowAnimation.Automatic)
+            }
         }
     }
 
@@ -109,7 +127,15 @@ class MeetController: UITableViewController {
     override func tableView(tableView: UITableView,
                             numberOfRowsInSection section: Int) -> Int {
         if (section == 3) {
-            return people.count
+            
+            if (self.isAttendeesLoading) {
+                return 1
+            }
+            
+            let numAttendeeRows = Int(ceil(Double((attendees?.count)!) / 3.0))
+            print("numAttendeesRows: \(numAttendeeRows)")
+            return numAttendeeRows
+            
         } else {
             return 1
         }
@@ -126,8 +152,32 @@ class MeetController: UITableViewController {
         
         var cell: UITableViewCell
         
+        // the Attendee section:
         if (indexPath.section == 3) {
-            cell = tableView.dequeueReusableCellWithIdentifier("AttendeeCell", forIndexPath: indexPath)
+            let index = indexPath.row
+            let attendeeCell = tableView.dequeueReusableCellWithIdentifier("AttendeeCell", forIndexPath: indexPath) as! AttendeeCell
+            
+            if (self.isAttendeesLoading) {
+                attendeeCell.loadingSpinner.hidden = false
+                attendeeCell.loadingSpinner.startAnimating()
+            } else {
+                attendeeCell.loadingSpinner.hidden = true
+                attendeeCell.loadingSpinner.stopAnimating()
+                
+                
+                // giving it its meets:
+                var endIndex = (index + 1)*3
+                if (endIndex >= (self.attendees?.count)!) {
+                    endIndex = (self.attendees?.count)! - 1
+                }
+                
+                let subArr = self.attendees?.subarrayWithRange(NSMakeRange(index*3, endIndex + 1)) as! NSMutableArray
+                attendeeCell.attendeesForRow = subArr
+                attendeeCell.setDataSource()
+            }
+            attendeeCell.parentController = self
+            return attendeeCell
+
         } else if (indexPath.section == 2) {
             cell = tableView.dequeueReusableCellWithIdentifier("DividerCell", forIndexPath: indexPath)
             
@@ -151,7 +201,6 @@ class MeetController: UITableViewController {
             // TODO: remove redundancy here!
             let cell = tableView.dequeueReusableCellWithIdentifier("MeetInfoCell", forIndexPath: indexPath) as! MeetInfoCell
             
-            
             if (self.meet == nil) {
                 return cell
             }
@@ -160,33 +209,35 @@ class MeetController: UITableViewController {
             let description = self.meet!["description"]! as! String!
             let hostName = (self.meet!["createdBy"]!!["name"]! as! String!)
             let picUrl = self.meet!["createdBy"]!!["pictureUrl"] as! String!
+            let duration = self.meet!["duration"]! as! Int!
             
             let startTime = self.meet!["startTime"] as! String!
             let endTime = self.meet!["endTime"] as! String!
             
             let long = self.meet!["loc"]!![0] as! Int!
             let lat = self.meet!["loc"]!![1] as! Int!
-            
-            print("startTime: \(startTime)")
-            print("endTime: \(endTime)")
-            print("long: \(long)")
-            print("lat: \(lat)")
+//            
+//            print("startTime: \(startTime)")
+//            print("endTime: \(endTime)")
+//            print("long: \(long)")
+//            print("lat: \(lat)")
             
             cell.dayLabel.text = "today"
-            cell.timeOuterView.backgroundColor = UIColor.blackColor()
-            cell.timeOuterView.layer.borderWidth = 1.0
-            cell.timeOuterView.layer.borderColor = UIColor.orangeColor().CGColor
-            cell.timeOuterView.layer.cornerRadius = cell.timeOuterView.frame.height / 2
- 
             cell.titleLabel.text = title
             cell.hostLabel.text = hostName
             
+            let meetDate = Util.convertUTCTimestampToDate(startTime)
+            let comps = Util.getComps(meetDate)
             
-            
-            cell.timeLabel.text =
-            cell.durationLabel.text = "duration: 1hr"
+            cell.timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
             
             cell.descriptionLabel.text = description
+            
+            // setting the height:
+            print("pre-labelheight: \(cell.descriptionLabel.frame.height)")
+            let newLabelHeight = Util.setHeightForLabel(description, label: cell.descriptionLabel, font: UIFont(name: "Helvetica", size: 14.0)!)
+            print("newLabelHeight: \(newLabelHeight) vs. \(cell.descriptionLabel.frame.height)")
+            
 
             let url = NSURL(string: picUrl)
             
@@ -204,6 +255,7 @@ class MeetController: UITableViewController {
             }
             
             cell.backgroundColor = UIColor.blackColor()
+            cell.setup()
             return cell
             
         } else {
@@ -218,14 +270,21 @@ class MeetController: UITableViewController {
         return cell
     }
     
-    override func tableView(tableView: UITableView,
-                            willDisplayCell cell: UITableViewCell,
-                                            forRowAtIndexPath indexPath: NSIndexPath) {
-        
-        guard let tableViewCell = cell as? AttendeeCell else { return }
-        
-        tableViewCell.setCollectionViewDataSourceDelegate(self, forRow: indexPath.row)
-    }
+//    override func tableView(tableView: UITableView,
+//                            willDisplayCell cell: UITableViewCell,
+//                                            forRowAtIndexPath indexPath: NSIndexPath) {
+//        
+//        guard let attendeeCell = cell as? AttendeeCell else { return }
+//        
+//        //tableViewCell.setCollectionViewDataSourceDelegate(self, forRow: indexPath.row)
+//        
+//        
+//        // setting 3 attendees to this row:
+//        let index = indexPath.row
+//        attendeeCell.attendeesForRow = self.attendees?.subarrayWithRange(NSMakeRange(index*3, (index+1)*3)) as! NSMutableArray
+//        attendeeCell.parentController = self 
+//        
+//    }
     
     // height?
     override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
@@ -239,65 +298,4 @@ class MeetController: UITableViewController {
             return 90.0
         }
     }
-
 }
-
-
-extension MeetController: UICollectionViewDelegate, UICollectionViewDataSource {
-    func collectionView(collectionView: UICollectionView,
-                        numberOfItemsInSection section: Int) -> Int {
-        
-        return people[collectionView.tag].count
-    }
-    
-    func collectionView(collectionView: UICollectionView,
-                        cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("attendeeCell",
-                                                                         forIndexPath: indexPath)
-        
-        
-        // setting default values for the user: TODO: change!!
-        if let nameLabel = cell.viewWithTag(100) as? UILabel {
-            nameLabel.text = "Foo Bar"
-        }
-        
-        if let avatarImage = cell.viewWithTag(101) as? UIImageView {
-            let picUrl = "https://scontent.xx.fbcdn.net/hprofile-xpf1/v/t1.0-1/p50x50/12509882_565775596928323_668499748259808876_n.jpg?oh=4733ef1dc8bc40849533f84e82e8a5a3&oe=57BA0EA0"
-            
-            Util.setAvatarImage(picUrl, avatarImage: avatarImage)
-        }
-        
-        return cell
-    }
-    
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        print("collectionView click: \(indexPath)")
-        performSegueWithIdentifier("UserModalSegue", sender: nil)
-    }
-}
-
-// collection view layout: centering the users in a row:
-// TODO: get this right across multiple screen sizes!!
-extension MeetController: UICollectionViewDelegateFlowLayout {
-    
-    func collectionView(collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                               insetForSectionAtIndex section: Int) -> UIEdgeInsets {
-        
-        let cellWidth = CGFloat(68.0)
-        let leftOffset = (collectionView.bounds.width - 4*(cellWidth)) / 3
-        let sectionInsets = UIEdgeInsets(top: 0.0, left: leftOffset, bottom: 0.0, right: 0.0)
-        return sectionInsets
-    }
-    
-//    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
-//                let itemsPerRow:CGFloat = 4
-//                //let hardCodedPadding:CGFloat = 5
-//                  let itemWidth = (collectionView.bounds.width / itemsPerRow) - 30
-////                let itemWidth = (collectionView.bounds.width / itemsPerRow) - hardCodedPadding
-//                let itemHeight = collectionView.bounds.height
-//        return CGSize(width: itemWidth, height: itemHeight)
-//    }
-}
-
