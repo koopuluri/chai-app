@@ -22,7 +22,19 @@ class Util {
     }
     
     static func getDurationText(seconds: Int) -> String {
-        return "hi"
+        // convert to human readable form:
+        let (h, m, _) = Util.secondsToHoursMinutesSeconds(seconds)
+        
+        if (h != 0) {
+            if (m != 0) {
+                return "\(h)hr \(m)m"
+            } else {
+                let end = (h == 1) ? "hr" : "hrs"
+                return "\(h)\(end)"
+            }
+        } else {
+            return "\(m)m"
+        }
     }
     
     // obtained from: http://stackoverflow.com/a/27203691

@@ -7,11 +7,8 @@
 //
 
 import UIKit
-import ActionButton
 
 class MainController: UIPageViewController {
-    
-    var actionButton: ActionButton!
     
     var navbarButtons: [UIButton]!
     
@@ -60,15 +57,6 @@ class MainController: UIPageViewController {
         
         // setting bg color of navigationBar to white:
         self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
-        
-        // Action button related stuff:
-        actionButton = ActionButton(attachedToView: self.view, items: [])
-        actionButton.action = { button in button.toggleMenu() }
-        actionButton.setTitle("+", forState: .Normal)
-        
-        actionButton.backgroundColor = UIColor(red: 238.0/255.0, green: 130.0/255.0, blue: 34.0/255.0, alpha:1.0)
-        
-        actionButton.action = { item in self.createMeetSegue() }
     }
     
     func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {

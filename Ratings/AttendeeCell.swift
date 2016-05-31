@@ -85,11 +85,20 @@ extension AttendeeCell: UICollectionViewDelegateFlowLayout {
                         layout collectionViewLayout: UICollectionViewLayout,
                                insetForSectionAtIndex section: Int) -> UIEdgeInsets {
         
-        let cellWidth = CGFloat(68.0)
-        let leftOffset = (collectionView.bounds.width - 3*(cellWidth)) / 2
-        let sectionInsets = UIEdgeInsets(top: 0.0, left: leftOffset, bottom: 0.0, right: 0.0)
-        return sectionInsets
-    }
+        let cellCount = CGFloat((attendeesForRow?.count)!)
+        if cellCount > 0 {
+            let flowLayout = collectionViewLayout as! UICollectionViewFlowLayout
+            let cellWidth = flowLayout.itemSize.width + flowLayout.minimumInteritemSpacing
+            let totalCellWidth = cellWidth * cellCount
+            let contentWidth = collectionView.frame.size.width - collectionView.contentInset.left - collectionView.contentInset.right
+            
+            if (totalCellWidth < contentWidth) {
+                let padding = (contentWidth - totalCellWidth) / 2.0
+                return UIEdgeInsetsMake(0, padding, 0, padding)
+            }
+        }
+        
+        return UIEdgeInsetsZero    }
     
     //    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
     //                let itemsPerRow:CGFloat = 4

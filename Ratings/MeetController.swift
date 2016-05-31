@@ -8,8 +8,9 @@
 
 import UIKit
 import Alamofire
+import MapKit
 
-class MeetController: UITableViewController {
+class MeetController: UITableViewController, CLLocationManagerDelegate {
     
     var from: String?
     
@@ -27,6 +28,11 @@ class MeetController: UITableViewController {
     // when true, loading spinner shown while making call to server to join the user to this meet:
     var isJoining = false
     
+    // location manager used to grab user's current location
+    var locationManager = CLLocationManager()
+    
+    var currentLocation: CLLocationCoordinate2D?
+    
     var attendees: NSMutableArray?
     
     var people: [[UIColor]] = [
@@ -40,13 +46,36 @@ class MeetController: UITableViewController {
         [UIColor.redColor(), UIColor.redColor(), UIColor.redColor(), UIColor.redColor()]
     ]
     
+    // grabbing the user's current location information:
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        self.currentLocation = manager.location!.coordinate
+        
+        // don't want any more updates!
+        self.locationManager.stopUpdatingLocation()
+        
+        // now update the MapCell:
+        self.tableView.reloadRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: UITableViewRowAnimation.None)
+        
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.registerNib(UINib(nibName: "MeetInfo", bundle: nil), forCellReuseIdentifier: "MeetInfoCell")
         
+        // some tableView styling:
+        tableView.contentInset = UIEdgeInsetsMake(44,0,0,0);
         tableView.separatorStyle = .None
         tableView.backgroundColor = UIColor.blackColor()
         tableView.allowsSelection = false;
+        
+        // location stuff:
+        self.locationManager.requestWhenInUseAuthorization()
+        
+        if CLLocationManager.locationServicesEnabled() {
+            locationManager.delegate = self
+            locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            locationManager.startUpdatingLocation()
+        }
         
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         self.refreshControl?.tintColor = UIColor.orangeColor()
@@ -55,7 +84,6 @@ class MeetController: UITableViewController {
         print("MeetController.viewDidLoad().meetId: \(self.meetId)")
         startRefresh()
         fetchAttendees()
-        // Do any additional setup after loading the view.
     }
     
     // If self.meet is set when this is called, it will update the UI to
@@ -99,7 +127,12 @@ class MeetController: UITableViewController {
         Alamofire.request(.GET, url) .responseJSON { response in
             if let JSON = response.result.value {
                 // TODO: handle the error case:
-                self.attendees = JSON["attendees"]! as! NSMutableArray!
+                
+                // TODO: testing right now, remove this:
+                let poop = JSON["attendees"]! as! NSMutableArray!
+                self.attendees = NSMutableArray(array: [poop[0], poop[0], poop[0], poop[0], poop[0]])
+                
+                //self.attendees = JSON["attendees"]! as! NSMutableArray!
                 self.isAttendeesLoading = false
                 
                 // reload the attendee section:
@@ -150,8 +183,6 @@ class MeetController: UITableViewController {
     override func tableView(tableView: UITableView,
                             cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
-        var cell: UITableViewCell
-        
         // the Attendee section:
         if (indexPath.section == 3) {
             let index = indexPath.row
@@ -165,21 +196,22 @@ class MeetController: UITableViewController {
                 attendeeCell.loadingSpinner.stopAnimating()
                 
                 
-                // giving it its meets:
-                var endIndex = (index + 1)*3
-                if (endIndex >= (self.attendees?.count)!) {
-                    endIndex = (self.attendees?.count)! - 1
+                let totalCount = index*3 + 3
+                var count = 3
+                if (totalCount > self.attendees?.count) {
+                    count = (self.attendees?.count)! - index*3
                 }
                 
-                let subArr = self.attendees?.subarrayWithRange(NSMakeRange(index*3, endIndex + 1)) as! NSMutableArray
+                let subArr = self.attendees?.subarrayWithRange(NSMakeRange(index*3, count)) as! NSMutableArray
                 attendeeCell.attendeesForRow = subArr
                 attendeeCell.setDataSource()
             }
             attendeeCell.parentController = self
+            attendeeCell.backgroundColor = UIColor.blackColor()
             return attendeeCell
 
         } else if (indexPath.section == 2) {
-            cell = tableView.dequeueReusableCellWithIdentifier("DividerCell", forIndexPath: indexPath)
+            let cell = tableView.dequeueReusableCellWithIdentifier("DividerCell", forIndexPath: indexPath)
             
             if (self.meet == nil) {
                 return cell
@@ -187,7 +219,8 @@ class MeetController: UITableViewController {
             
             if let outerView = cell.viewWithTag(11) as? UIView! {
                 outerView.layer.masksToBounds = false
-                outerView.layer.cornerRadius = outerView.frame.height/2
+                outerView.layer.cornerRadius = 5.0
+                outerView.backgroundColor = Util.getMainColor()
             }
             
             if let countLabel = cell.viewWithTag(10) as? UILabel {
@@ -196,6 +229,8 @@ class MeetController: UITableViewController {
                 let maxCount = self.meet!["maxCount"] as! Int!
                 countLabel.text = String(count) + "/" + String(maxCount)
             }
+            
+            return cell
             
         } else if (indexPath.section == 1) {
             // TODO: remove redundancy here!
@@ -212,25 +247,22 @@ class MeetController: UITableViewController {
             let duration = self.meet!["duration"]! as! Int!
             
             let startTime = self.meet!["startTime"] as! String!
-            let endTime = self.meet!["endTime"] as! String!
             
-            let long = self.meet!["loc"]!![0] as! Int!
-            let lat = self.meet!["loc"]!![1] as! Int!
-//            
+//
 //            print("startTime: \(startTime)")
 //            print("endTime: \(endTime)")
 //            print("long: \(long)")
 //            print("lat: \(lat)")
             
-            cell.dayLabel.text = "today"
             cell.titleLabel.text = title
             cell.hostLabel.text = hostName
             
             let meetDate = Util.convertUTCTimestampToDate(startTime)
             let comps = Util.getComps(meetDate)
             
+            cell.dayLabel.text = NSCalendar.currentCalendar().isDateInToday(meetDate) ? "today" : "tomorrow"
             cell.timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
-            
+            cell.durationLabel.text = Util.getDurationText(duration)
             cell.descriptionLabel.text = description
             
             // setting the height:
@@ -238,7 +270,6 @@ class MeetController: UITableViewController {
             let newLabelHeight = Util.setHeightForLabel(description, label: cell.descriptionLabel, font: UIFont(name: "Helvetica", size: 14.0)!)
             print("newLabelHeight: \(newLabelHeight) vs. \(cell.descriptionLabel.frame.height)")
             
-
             let url = NSURL(string: picUrl)
             
             let avatarImage = cell.avatarImage
@@ -257,43 +288,45 @@ class MeetController: UITableViewController {
             cell.backgroundColor = UIColor.blackColor()
             cell.setup()
             return cell
-            
         } else {
-            cell = tableView.dequeueReusableCellWithIdentifier("MapViewCell", forIndexPath: indexPath)
+            let mapCell = tableView.dequeueReusableCellWithIdentifier("MapViewCell", forIndexPath: indexPath) as! MapCell
             
             if (self.meet == nil) {
-                return cell
+                return mapCell
             }
+            
+            if ((self.currentLocation) != nil) {
+                // set the cell with the locations of user and meet:
+                let long = self.meet!["loc"]!![0] as! Float!
+                let lat = self.meet!["loc"]!![1] as! Float!
+                
+                let locationAddress = self.meet!["locationAddress"]! as! String!
+                let locationName = self.meet!["locationName"]! as! String!
+                
+                let meetLocation = CLLocationCoordinate2D(latitude: CLLocationDegrees(lat), longitude: CLLocationDegrees(long))
+                
+                print("setting mapView! \(lat), \(long)")
+                mapCell.setMap(
+                    self.currentLocation,
+                    meetLocation: meetLocation,
+                    meetLocationName: locationName,
+                    meetLocationAddress: locationAddress
+                )
+                
+            }
+
+            return mapCell
         }
-        
-        cell.backgroundColor = UIColor.blackColor()
-        return cell
     }
-    
-//    override func tableView(tableView: UITableView,
-//                            willDisplayCell cell: UITableViewCell,
-//                                            forRowAtIndexPath indexPath: NSIndexPath) {
-//        
-//        guard let attendeeCell = cell as? AttendeeCell else { return }
-//        
-//        //tableViewCell.setCollectionViewDataSourceDelegate(self, forRow: indexPath.row)
-//        
-//        
-//        // setting 3 attendees to this row:
-//        let index = indexPath.row
-//        attendeeCell.attendeesForRow = self.attendees?.subarrayWithRange(NSMakeRange(index*3, (index+1)*3)) as! NSMutableArray
-//        attendeeCell.parentController = self 
-//        
-//    }
     
     // height?
     override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         if (indexPath.section == 0) {
             return 200.0
         } else if (indexPath.section == 1) {
-            return 400.0
+            return 320.0
         } else if (indexPath.section == 2) {
-            return 100.0
+            return 80.0
         } else {
             return 90.0
         }

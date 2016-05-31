@@ -9,6 +9,7 @@
 import UIKit
 import Alamofire
 import MapKit
+import SwiftyButton
 
 import FBSDKLoginKit
 import FBSDKCoreKit
@@ -27,6 +28,8 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     var start = 0
     var count = 10
     
+    @IBOutlet weak var createMeetButton: SwiftyButton!
+    
     var currentLocation: CLLocationCoordinate2D?
     
     // location manager used to grab user's current location
@@ -38,6 +41,10 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     // keeps track of loading of user meets:
     var userMeetsLoading = true
     var userMeets: NSMutableArray?
+    
+    @IBAction func create(sender: AnyObject) {
+        
+    }
     
     @IBAction func chat(sender: UIBarButtonItem) {
         let poop = self.navigationController?.parentViewController as? MainController
@@ -71,6 +78,20 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // making it so that the first row isn't behind the navbar:
+        tableView.contentInset = UIEdgeInsetsMake(44,0,0,0);
+        
+        // navigation bar coloring:
+        self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
+        self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
+        self.navigationItem.rightBarButtonItem?.tintColor = Util.getMainColor()
+        
+        createMeetButton.buttonColor = Util.getMainColor()
+        createMeetButton.shadowHeight = 0
+        createMeetButton.cornerRadius = 5
+        createMeetButton.highlightedColor = UIColor.greenColor()
+        
+        
         // setting the location manager stuff:
         self.locationManager.requestWhenInUseAuthorization()
         
@@ -86,7 +107,6 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         startRefresh()
-        self.navigationController!.navigationBar.barTintColor = UIColor.orangeColor()
     }
     
     
@@ -324,21 +344,7 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         if let durationLabel = cell.viewWithTag(105) as? UILabel {
             let duration = meet["duration"]! as! Int
             print("obtained duration: \(duration)")
-            
-            // convert to human readable form:
-            let (h, m, _) = Util.secondsToHoursMinutesSeconds(duration)
-            
-            if (h != 0) {
-                if (m != 0) {
-                    durationLabel.text = "\(h)hr \(m)m"
-                } else {
-                    let end = (h == 1) ? "hr" : "hrs"
-                    durationLabel.text = "\(h)\(end)"
-                }
-            } else {
-                durationLabel.text = "\(m)m"
-            }
-            
+            durationLabel.text = Util.getDurationText(duration)
             durationLabel.textColor = Util.getMainColor()
         }
         
