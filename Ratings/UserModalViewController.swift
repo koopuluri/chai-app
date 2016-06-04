@@ -43,6 +43,9 @@ class UserModalViewController: UIViewController {
         modalView.layer.borderWidth = 1.0
         modalView.layer.cornerRadius = 5.0
         
+        self.view.backgroundColor = UIColor.clearColor()
+        self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
+        
         if (!canRemoveFromMeet) {
             
             // don't give option to remove user:

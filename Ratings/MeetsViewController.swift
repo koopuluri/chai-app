@@ -325,19 +325,9 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         }
         
         if let timeLabel = cell.viewWithTag(102) as? UILabel {
-            
             let meetTimeString = meet["startTime"]! as! String!
             let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
-            
-            // getting hour and mins:
-            let allUnits = NSCalendarUnit(rawValue: UInt.max)
-            let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
-            if (indexPath.section == 1) {
-                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
-            } else if (indexPath.section == 2) {
-                timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
-            }
-            
+            timeLabel.text = Util.getUpcomingMeetTimestamp(meetTime)
             timeLabel.textColor = Util.getMainColor()
         }
         
@@ -371,8 +361,9 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         
         if let countLabel = cell.viewWithTag(103) as? UILabel {
             let count = (meet["count"]! as! Int!)
+            let maxCount = meet["maxCount"]! as! Int!
             
-            countLabel.text = String(count) + "/3"
+            countLabel.text = String(count) + "/" + String(maxCount)
         }
         
         return cell 

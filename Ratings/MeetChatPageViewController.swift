@@ -21,6 +21,8 @@ class MeetChatPageViewController: UIPageViewController {
     var from: String?
     var mode: String?
     
+    var isMember = false
+    
     @IBOutlet weak var titleButton: UIButton!
     @IBOutlet weak var titleSpinner: UIActivityIndicatorView!
     
@@ -36,9 +38,21 @@ class MeetChatPageViewController: UIPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // making it so that the first row isn't behind the navbar:
+        self.edgesForExtendedLayout = UIRectEdge.None
+        
         dataSource = self
         delegate = self
         
+        switchSegment.tintColor = UIColor.whiteColor()
+        
+        // styling the joinButton:
+        joinButton.buttonColor = Util.getMainColor()
+        joinButton.shadowHeight = 0
+        joinButton.cornerRadius = 5
+        joinButton.highlightedColor = UIColor.greenColor()
+        joinButton.setTitle("join", forState: UIControlState.Normal)
+        joinButton.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
         
         fetchAndSetUserMeetInfo()
     }
@@ -50,12 +64,28 @@ class MeetChatPageViewController: UIPageViewController {
     }
     
     @IBAction func transitionMeetSettings(sender: UIButton) {
-//        let settingsModalViewController = MeetSettingsModalViewController()
-//        settingsModalViewController.modalPresentationStyle = .OverCurrentContext
-//        presentViewController(settingsModalViewController, animated: true, completion: nil)
+        if (self.isMember) {
+            performSegueWithIdentifier("MeetSettingsSegue", sender: self)
+        }
+    }
+    
+    func setNavStyleForMember() {
+        // set the color of the navbar:
+        self.navigationController!.navigationBar.barTintColor = Util.getMainColor()
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.whiteColor()
+        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.whiteColor()
         
-        performSegueWithIdentifier("MeetSettingsSegue", sender: self)
-        
+        self.titleButton.enabled = true
+        self.titleButton.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
+    }
+    
+    func setNavStyleForNonMember() {
+        // user is not part of meet: ==> set joinButton, and reg. background color
+        self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
+        self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
+
+        self.titleButton.enabled = false
+        self.titleButton.setTitleColor(UIColor.darkGrayColor(), forState: UIControlState.Normal)
     }
     
     // gets following info about user-meet:
@@ -83,6 +113,8 @@ class MeetChatPageViewController: UIPageViewController {
                     // setting navbar:
                     if (isHost || isAttendee) {
                         
+                        self.isMember = true
+                        
                         // adding the chat view as another page:
                         self.addChatView()
                         
@@ -99,11 +131,11 @@ class MeetChatPageViewController: UIPageViewController {
                             direction: .Forward,
                             animated: true,
                             completion: nil)
-
                         
-                        // set the color of the navbar:
-                        self.navigationController!.navigationBar.barTintColor = Util.getMainColor()
+                        self.setNavStyleForMember()
+
                     } else {
+                        self.isMember = false
                         
                         // startView controller is the meetController:
                         let startController = self.orderedViewControllers[0]
@@ -112,9 +144,7 @@ class MeetChatPageViewController: UIPageViewController {
                             animated: true,
                             completion: nil)
                         
-                        // user is not part of meet: ==> set joinButton, and reg. background color
-                        self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
-                        
+                        self.setNavStyleForNonMember()
                     }
                     
                     // set the title to the meetTitle
@@ -135,20 +165,6 @@ class MeetChatPageViewController: UIPageViewController {
     // stops spinner in navbar (in titleLabel)
     func setTitleViewText(title: String?) {
         self.titleSpinner.hidden = true
-        self.titleButton.setTitle(title, forState: UIControlState.Normal)
-    }
-    
-    // called when the navigation title button is clicked.
-    // only navigates to settings if the user is a member / is host of meet.
-    @IBAction func settings() {
-        let meetController = self.meetController! as! MeetController
-        if (meetController.isCurrentUserAttendee || meetController.isCurrentUserHost) {
-            // segue to the MeetSettings:
-            performSegueWithIdentifier("MeetSettingsSegue", sender: self)
-        }
-    }
-    
-    func setNavTitle(title: String?) {
         self.titleButton.setTitle(title, forState: UIControlState.Normal)
     }
     
@@ -242,13 +258,13 @@ class MeetChatPageViewController: UIPageViewController {
     func setSwitchSegment(index: Int?) {
         switchSegment.selectedSegmentIndex = index!
         let switchBarButton = UIBarButtonItem(customView: switchSegment)
-        print("setSwitchSegment!")
         self.navigationItem.rightBarButtonItem = switchBarButton
     }
     
     private func newChatController(meetId: String?) -> UIViewController {
         let threadController = UIStoryboard(name: "Main", bundle: nil) .
             instantiateViewControllerWithIdentifier("ThreadViewController") as! MeetThreadViewController;
+        threadController.meetId = self.meetId
         return threadController;
     }
 }

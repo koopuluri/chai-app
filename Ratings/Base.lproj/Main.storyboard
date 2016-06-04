@@ -43,8 +43,9 @@
                                     <rect key="frame" x="3" y="0.0" width="142" height="30"/>
                                     <color key="backgroundColor" white="0.5" alpha="0.0" colorSpace="calibratedWhite"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                     <state key="normal" title="Button">
-                                        <color key="titleColor" red="0.50196081400000003" green="0.50196081400000003" blue="0.50196081400000003" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                     </state>
                                     <connections>
                                         <action selector="transitionMeetSettings:" destination="Xqw-qk-f49" eventType="touchUpInside" id="j3Z-jq-bkx"/>
@@ -280,15 +281,27 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="101" height="76.5"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <subviews>
-                                                            <label opaque="NO" userInteractionEnabled="NO" tag="101" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yzX-Nc-Btm">
-                                                                <rect key="frame" x="8" y="12" width="85" height="21"/>
-                                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
+                                                            <label opaque="NO" userInteractionEnabled="NO" tag="100" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9s6-WG-XGb">
+                                                                <rect key="frame" x="8" y="47" width="85" height="21"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="10"/>
                                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
-                                                            <label opaque="NO" userInteractionEnabled="NO" tag="100" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9s6-WG-XGb">
-                                                                <rect key="frame" x="8" y="39" width="85" height="21"/>
-                                                                <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                                            <view tag="103" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RRH-M2-8f1">
+                                                                <rect key="frame" x="0.0" y="0.0" width="101" height="22"/>
+                                                                <subviews>
+                                                                    <label opaque="NO" userInteractionEnabled="NO" tag="102" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jVt-EP-L41">
+                                                                        <rect key="frame" x="8" y="2" width="85" height="17"/>
+                                                                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                        <color key="textColor" red="0.49803921579999999" green="0.49803921579999999" blue="0.49803921579999999" alpha="1" colorSpace="calibratedRGB"/>
+                                                                        <nil key="highlightedColor"/>
+                                                                    </label>
+                                                                </subviews>
+                                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                            </view>
+                                                            <label opaque="NO" userInteractionEnabled="NO" tag="101" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yzX-Nc-Btm">
+                                                                <rect key="frame" x="8" y="27" width="85" height="21"/>
+                                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
                                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
@@ -532,23 +545,22 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="Add Meet" id="GWE-qD-T7R">
-                        <barButtonItem key="leftBarButtonItem" style="plain" id="96E-jW-odB">
-                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="z5L-uW-QGM">
-                                <rect key="frame" x="16" y="7" width="83" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="cancel"/>
-                                <connections>
-                                    <segue destination="9gO-vj-u9b" kind="unwind" unwindAction="unwindMeets:" id="58U-7a-CGU"/>
-                                </connections>
-                            </button>
+                        <barButtonItem key="leftBarButtonItem" image="back" id="EXf-wO-f44">
+                            <connections>
+                                <segue destination="9gO-vj-u9b" kind="unwind" unwindAction="unwindMeets:" id="pKZ-gj-9sm"/>
+                            </connections>
                         </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" style="plain" id="WYd-q7-YiS">
                             <view key="customView" contentMode="scaleToFill" id="uY7-Yg-hOh">
                                 <rect key="frame" x="276" y="5" width="83" height="33"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
+                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="vqK-X3-E3r">
+                                        <rect key="frame" x="31" y="7" width="20" height="20"/>
+                                        <color key="color" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    </activityIndicatorView>
                                     <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TLA-aI-vfk" customClass="SwiftyButton" customModule="SwiftyButton">
-                                        <rect key="frame" x="0.0" y="2" width="83" height="30"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="83" height="33"/>
                                         <state key="normal" title="Button"/>
                                         <userDefinedRuntimeAttributes>
                                             <userDefinedRuntimeAttribute type="color" keyPath="buttonColor">
@@ -559,10 +571,6 @@
                                             <action selector="submit:" destination="hDd-5q-mXy" eventType="touchUpInside" id="61G-zC-4xl"/>
                                         </connections>
                                     </button>
-                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="vqK-X3-E3r">
-                                        <rect key="frame" x="31" y="7" width="20" height="20"/>
-                                        <color key="color" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                    </activityIndicatorView>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
@@ -816,19 +824,19 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
                                         <label opaque="NO" userInteractionEnabled="NO" tag="100" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UL4-IV-OY7">
-                                            <rect key="frame" x="8" y="3" width="237" height="29"/>
+                                            <rect key="frame" x="24" y="3" width="237" height="29"/>
                                             <fontDescription key="fontDescription" type="system" weight="light" pointSize="20"/>
                                             <color key="textColor" red="0.49719854797979801" green="0.49719854797979801" blue="0.49719854797979801" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <label opaque="NO" userInteractionEnabled="NO" tag="101" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kkY-ij-60F">
-                                            <rect key="frame" x="253" y="7" width="114" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                        <label opaque="NO" userInteractionEnabled="NO" tag="101" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kkY-ij-60F">
+                                            <rect key="frame" x="297" y="7" width="70" height="21"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                             <color key="textColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label opaque="NO" userInteractionEnabled="NO" tag="103" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VSD-Zg-i6E">
-                                            <rect key="frame" x="8" y="33" width="344" height="21"/>
+                                            <rect key="frame" x="24" y="36" width="322" height="21"/>
                                             <fontDescription key="fontDescription" type="system" weight="thin" pointSize="15"/>
                                             <color key="textColor" red="0.40654592803030298" green="0.40654592803030298" blue="0.40654592803030298" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
@@ -1313,6 +1321,6 @@
         <image name="setting" width="49" height="49"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="Rzt-27-CY0"/>
+        <segue reference="eNS-FM-rSG"/>
     </inferredMetricsTieBreakers>
 </document>

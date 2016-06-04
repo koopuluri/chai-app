@@ -16,6 +16,7 @@ import SwiftyButton
 class Validation: NSObject {
     var titleText = false
     var location = false
+    var meetTime = false
 }
 
 class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, CLLocationManagerDelegate {
@@ -25,6 +26,7 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     
     @IBOutlet weak var submitSpinner: UIActivityIndicatorView!
     @IBOutlet weak var submitButton: SwiftyButton!
+    
     @IBOutlet weak var startTimeDatePicker: UIDatePicker!
     @IBOutlet weak var daySegment: UISegmentedControl!
     @IBOutlet weak var locationLabel: UILabel!
@@ -66,7 +68,6 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     func enableForm() {
         self._toggleForm(true)
     }
-    
     
     @IBAction func submit(sender: AnyObject) {
         // button could not have been pressed if validations did not hold.
@@ -110,10 +111,8 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
             duration = 60*60*3
         }
         
-        
         // maxAttendees:
         let maxAttendees = Int(self.maxAttendeesSegment.titleForSegmentAtIndex(self.maxAttendeesSegment.selectedSegmentIndex)!)
-        
         
         // doing final validation:
         if (locInfo == nil) {
@@ -125,7 +124,6 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
             // stop and tell user
         }
         
-        
         // combining information and sending to server:
         // make the call:
         let url = "https://one-mile.herokuapp.com/create_meet"
@@ -136,7 +134,6 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         print("duration: \(duration)")
         print("loc.coords: \(locInfo?.coords)")
         print("loc.address: \(locInfo?.address)")
-        
         
         Alamofire.request(.POST, url,
             parameters: [
@@ -179,8 +176,6 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
                     }
                 }
         }
-        
-        
     }
     
     // takes coords and gives name and address for a location:
@@ -225,7 +220,7 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     }
     
     func validateButton() {
-        if (validation.titleText && validation.location) {
+        if (validation.titleText && validation.location && validation.meetTime) {
             self.submitButton.enabled = true
         } else {
             self.submitButton.enabled = false
@@ -275,27 +270,37 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         }
         
         titleTextField.layer.borderColor = UIColor.lightGrayColor().CGColor
-        
-        return newLength <= 5 // Bool
+        return newLength <= Util.MAX_TITLE_SIZE // Bool
     }
     
     // for the description text view:
     func textView(textView: UITextView, shouldChangeTextInRange range: NSRange, replacementText text: String) -> Bool {
-        let maxtext: Int = 140
         guard let string = textView.text else {return true}
         //If the text is larger than the maxtext, the return is false
         
         // Swift 2.0
-        return textView.text.characters.count + (text.characters.count - range.length) <= maxtext
+        return textView.text.characters.count + (text.characters.count - range.length) <= Util.MAX_DESCRIPTION_SIZE
     }
     
     override func viewDidLoad() {
         
+        self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
+        self.navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
+        self.navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
+        
+        // disabling and styling the submit button:
         submitButton.enabled = false
+        submitButton.setTitle("Submit", forState: UIControlState.Normal)
+        submitButton.buttonColor = Util.getMainColor()
+        submitButton.shadowHeight = 0
+        submitButton.highlightedColor = UIColor.greenColor()
+        
+        self.startTimeDatePicker.addTarget(self, action: Selector("datePickerChanged:"), forControlEvents: UIControlEvents.ValueChanged)
+        
+        // hiding the spinner:
         submitSpinner.hidden = true
         
         self.locationSpinner.startAnimating()
-        
         
         // setting the location manager stuff:
         self.locationManager.requestWhenInUseAuthorization()
@@ -346,6 +351,8 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         
         daySegment.setTitle(todayLabel, forSegmentAtIndex: 0)
         daySegment.setTitle(tomorrowLabel, forSegmentAtIndex: 1)
+        daySegment.addTarget(self, action: Selector("daySegmentChanged:"), forControlEvents: UIControlEvents.ValueChanged)
+
         
         
         // duration:
@@ -367,6 +374,39 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
             meetChatController.from = "Meets"
             meetChatController.mode = "Meet"
         }
+    }
+    
+    // gets the timestamp by using the selected day and time information from "daySegment" and "startTimePicker"
+    func validateFormTimestamp() {
+        let selectedDate = self.startTimeDatePicker.date
+        let daySelection = self.daySegment.selectedSegmentIndex
+        
+        if (daySelection == 0) {
+            self.meetTimestamp = selectedDate
+        } else {
+            // need to add a day to startTime to get the meet timestamp:
+            let allUnits = NSCalendarUnit(rawValue: UInt.max)
+            let startTimeComponents = NSCalendar.currentCalendar().components(allUnits, fromDate: selectedDate)
+            startTimeComponents.day = startTimeComponents.day + 1
+            let calendar = NSCalendar.currentCalendar()
+            self.meetTimestamp = calendar.dateFromComponents(startTimeComponents)!
+        }
+
+        if (NSDate().compare(self.meetTimestamp) == NSComparisonResult.OrderedAscending) {
+            self.validation.meetTime = true
+        } else {
+            self.validation.meetTime = false
+        }
+        self.validateButton()
+    }
+    
+    func daySegmentChanged(daySegment: UISegmentedControl) {
+        validateFormTimestamp()
+    }
+    
+    // for the datePicker, on change, validate:
+    func datePickerChanged(datePicker:UIDatePicker) {
+        validateFormTimestamp()
     }
 }
 

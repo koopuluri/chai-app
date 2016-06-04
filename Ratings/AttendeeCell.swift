@@ -72,6 +72,16 @@ extension AttendeeCell: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         print("collectionView click: \(indexPath)")
+        
+        //let userId = attendeesForRow![indexPath.row]["_id"]! as! String!
+        
+        
+//        let userModalVC = UserModalViewController()
+//        userModalVC.view.backgroundColor = UIColor.clearColor()
+//        userModalVC.userId = userId
+        
+        self.parentController!.modalPresentationStyle = UIModalPresentationStyle.CurrentContext
+        //self.parentController!.presentViewController(userModalVC, animated: true, completion: nil)
         self.parentController!.performSegueWithIdentifier("UserModalSegue", sender: nil)
     }
 }

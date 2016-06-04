@@ -10,7 +10,75 @@ import Foundation
 import UIKit
 import MapKit
 
+
+
 class Util {
+    
+    static let MAX_TITLE_SIZE = 20
+    static let MAX_DESCRIPTION_SIZE = 80
+    
+    static var CURRENT_USER_ID = "57129ebcedd2393b22395684"
+    
+    
+    // getting the day for display in format: mm/33/yyyy if date before today, else, "today" / "tomorrow" for future dates.
+    static func getDay(date: NSDate) -> String {
+        if (NSCalendar.currentCalendar().isDateInToday(date)) {
+            return "today"
+        }
+        
+        if (NSCalendar.currentCalendar().isDateInTomorrow(date)) {
+            return "tomorrow"
+        }
+        
+        // date is definitely in the past:
+        return Util.getChatTimestamp(date)
+    }
+    
+    
+    // for upcoming meets --> currently used for all timestamps in MeetsViewController as all meets displayed there are upcoming only.
+    static func getUpcomingMeetTimestamp(meetTime: NSDate) -> String {
+        let now = NSDate()
+        
+        if (now.hoursFrom(meetTime) == 0) {
+            // return num minutes:
+            return "in " + String(now.minutesFrom(meetTime)) + "m"
+        } else {
+            // return the time:
+            let formatter = NSDateFormatter()
+            formatter.timeStyle = .ShortStyle
+            let dateString = formatter.stringFromDate(meetTime)
+            
+            print("dateString: \(dateString)")
+            let comps = dateString.componentsSeparatedByString(" ")
+            
+            // now getting the last 2 sections:
+            return comps[comps.count - 2] + comps[comps.count - 1].lowercaseString
+        }
+    }
+    
+    // FB messenger style timestamps
+    static func getChatTimestamp(chatTime: NSDate) -> String {
+        let now = NSDate()
+        
+        if (now.daysFrom(chatTime) == 0) {
+            // display in terms of hours / mins ago
+            let hours = now.hoursFrom(chatTime)
+            if (hours == 0) {
+                // display in mins:
+                let mins = now.minutesFrom(chatTime)
+                return "\(mins)m ago"
+            } else {
+                return "\(hours)h ago"
+            }
+        } else {
+            // return the date:
+            let formatter = NSDateFormatter()
+            formatter.dateStyle = NSDateFormatterStyle.ShortStyle
+            let dateString = formatter.stringFromDate(chatTime)
+            let comps = dateString.componentsSeparatedByString(" ")
+            return comps[0]
+        }
+    }
     
     // obtained from: http://stackoverflow.com/a/26794841
     static func secondsToHoursMinutesSeconds (seconds : Int) -> (Int, Int, Int) {
@@ -97,11 +165,6 @@ class Util {
         formatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         let utcDate = formatter.dateFromString(timestamp!)
         return utcDate!
-        
-        // now converting to local date:
-//        let tz = NSTimeZone.localTimeZone()
-//        let seconds = tz.secondsFromGMTForDate(utcDate!)
-//        return utcDate!.dateByAddingTimeInterval(NSTimeInterval(seconds))
     }
     
     // height for a specific UILabel:
@@ -132,3 +195,40 @@ class Util {
         var address: String?
     }
 }
+
+// convenience methods to get deltas b/w two dates. Obtained from: http://stackoverflow.com/a/27184261; author: S/O user "Leo Dabus"
+extension NSDate {
+    func yearsFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Year, fromDate: date, toDate: self, options: []).year
+    }
+    func monthsFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Month, fromDate: date, toDate: self, options: []).month
+    }
+    func weeksFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.WeekOfYear, fromDate: date, toDate: self, options: []).weekOfYear
+    }
+    func daysFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Day, fromDate: date, toDate: self, options: []).day
+    }
+    func hoursFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Hour, fromDate: date, toDate: self, options: []).hour
+    }
+    func minutesFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Minute, fromDate: date, toDate: self, options: []).minute
+    }
+    func secondsFrom(date:NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Second, fromDate: date, toDate: self, options: []).second
+    }
+    func offsetFrom(date:NSDate) -> String {
+        if yearsFrom(date)   > 0 { return "\(yearsFrom(date))y"   }
+        if monthsFrom(date)  > 0 { return "\(monthsFrom(date))M"  }
+        if weeksFrom(date)   > 0 { return "\(weeksFrom(date))w"   }
+        if daysFrom(date)    > 0 { return "\(daysFrom(date))d"    }
+        if hoursFrom(date)   > 0 { return "\(hoursFrom(date))h"   }
+        if minutesFrom(date) > 0 { return "\(minutesFrom(date))m" }
+        if secondsFrom(date) > 0 { return "\(secondsFrom(date))s" }
+        return ""
+    }
+}
+
+

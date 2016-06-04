@@ -10,6 +10,7 @@ import UIKit
 import Foundation
 import JSQMessagesViewController
 import Alamofire
+import SocketIOClientSwift
 
 // extends JSQMessagesViewController to provide chat UI. 
 class MeetThreadViewController: JSQMessagesViewController{
@@ -17,11 +18,16 @@ class MeetThreadViewController: JSQMessagesViewController{
     var start = 0
     var count = 10
     
+    //var socket = SocketIOClient(socketURL: NSURL(fileURLWithPath: "https://one-mile.herokuapp.com"))
+    var socket: SocketIOClient?
+    
     var meetId: String?
     
-    let incomingBubble = JSQMessagesBubbleImageFactory().incomingMessagesBubbleImageWithColor(UIColor.orangeColor())
+    //let incomingBubble = JSQMessagesBubbleImageFactory().incomingMessagesBubbleImageWithColor(UIColor.orangeColor())
+    let incomingBubble = JSQMessagesBubbleImageFactory(bubbleImage: UIImage.jsq_bubbleCompactTaillessImage(), capInsets: UIEdgeInsetsZero).incomingMessagesBubbleImageWithColor(Util.getMainColor())
+
     
-    let outgoingBubble = JSQMessagesBubbleImageFactory().outgoingMessagesBubbleImageWithColor(UIColor.lightGrayColor())
+    let outgoingBubble = JSQMessagesBubbleImageFactory(bubbleImage: UIImage.jsq_bubbleCompactTaillessImage(), capInsets: UIEdgeInsetsZero).outgoingMessagesBubbleImageWithColor(UIColor.lightGrayColor())
     
     var messages = [JSQMessage]()
     
@@ -30,6 +36,67 @@ class MeetThreadViewController: JSQMessagesViewController{
         // Do any additional setup after loading the view, typically from a nib.
         self.setup()
         self.fetchMessages()
+        
+        // tell server that chat opened:
+        API.openedChat(self.meetId!)
+    }
+    
+    
+    // handles socket.io message received for chat: renders if new message is not authored by current user.
+    func handleSocketMessage(message: AnyObject) {
+        let isBot = message["isBot"]! as! Bool!
+        if (!isBot) {
+            let userId = message["author"]!!["_id"]! as! String!
+            if (userId == self.senderId) {
+                // don't add.
+            } else {
+                // add to the messages:
+                self.messages.append(getJSQMessageForChatMessage(message))
+            }
+        } else {
+            // if bot message, append.
+            self.messages.append(getJSQMessageForChatMessage(message))
+        }
+    }
+    
+    
+    // sets a message:
+    func getJSQMessageForChatMessage(message: AnyObject) -> JSQMessage {
+        let messageTimeString = message["createdAt"]! as! String!
+        let text = message["message"]! as! String!
+        let messageTime = Util.convertUTCTimestampToDate(messageTimeString)
+        let isBot = message["isBot"]! as! Bool!
+        var userId = ""
+        var username = ""
+        
+        if (!isBot) {
+            userId = message["author"]!!["_id"]! as! String!
+            username = message["author"]!!["name"]! as! String!
+        } else {
+            username = "meet-bot"
+        }
+        
+        return JSQMessage(senderId: userId, senderDisplayName: username, date: messageTime, text: text)
+    }
+    
+    
+    func setUpSocket() {
+        self.socket = SocketIOClient(socketURL: NSURL(string: "https://one-mile.herokuapp.com")!)
+
+        // adding handlers:
+        self.socket!.on(self.meetId!) { data, ack in
+            let message = data[0]
+            print("message received socket: \(message)")
+            self.handleSocketMessage(message)
+        }
+        
+        self.socket!.on("serverReady") { data, ack in
+            print("SERVER READY!!!! \(data[0])")
+        }
+        
+        self.socket?.onAny {print("Got event: \($0.event), with items: \($0.items!)")}
+        
+        self.socket!.connect()
     }
     
     override func didReceiveMemoryWarning() {
@@ -42,7 +109,9 @@ class MeetThreadViewController: JSQMessagesViewController{
     }
     
     func fetchMessages() {
-        let url = "https://one-mile.herokuapp.com/meet_chat?meetId=\(self.meetId!)&accessToken=poop"
+        let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&accessToken=poop&start=\(self.start)&count=\(self.count)"
+        
+        print("getChatMessagesForMeet url: \(url)")
         
         Alamofire.request(.GET, url) .responseJSON { response in
             
@@ -53,37 +122,41 @@ class MeetThreadViewController: JSQMessagesViewController{
                 }
                 
                 // should be obtained in decreasing order of timestamp:
-                let chatMessages = JSON["meets"] as? NSMutableArray
+                let chatMessages = JSON["messages"] as? NSMutableArray
+                
+                // if nothing, pass.
+                if (chatMessages == nil || chatMessages!.count == 0) {
+                    return
+                }
                 
                 for message in (chatMessages! as NSArray as! [AnyObject]) {
-                    let messageTimeString = message["timestamp"]! as! String!
-                    print("messageTimestring: \(messageTimeString)")
-                    
-                    let messageTime = Util.convertUTCTimestampToDate(messageTimeString)
-                    let userId = message["createdBy"]!!["user"]!!["_id"]! as! String!
-                    let text = message["message"]! as! String!
-                    let username = message["createdBy"]!!["user"]!!["name"]! as! String!
-
                     // now create a JSQMessage object and append to the messages list:
-                    self.messages.append(JSQMessage(senderId: userId, senderDisplayName: username, date: messageTime, text: text))
+                    self.messages.append(self.getJSQMessageForChatMessage(message))
                 }
                 
                 // reload the messages:
                 self.reloadMessagesView()
+                
+                // set up socket once all of the message are fetched and set:
+                self.setUpSocket()
             }
         }
     }
 }
 
 
-
 //MARK - Setup
 extension MeetThreadViewController {
     
-    
     func setup() {
-        self.senderId = "0"
-        self.senderDisplayName = "Karthik"
+        self.senderId = Util.CURRENT_USER_ID
+        self.senderDisplayName = ""
+        self.showLoadEarlierMessagesHeader = true
+        
+        // don't display avatar images:
+        self.collectionView.collectionViewLayout.incomingAvatarViewSize = CGSizeZero
+        self.collectionView.collectionViewLayout.outgoingAvatarViewSize = CGSizeZero
+        
     }
     
     override func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -108,11 +181,12 @@ extension MeetThreadViewController {
             }
         }
         
-        print("message sender: \(message.senderDisplayName)")
-        return NSAttributedString(string: message.senderDisplayName)
+        let label = message.senderDisplayName + " (" + Util.getChatTimestamp(message.date) + ")"
+        
+        return NSAttributedString(string: label)
     }
     
-    // no idea what this is:
+    // height for bubble top label
     override func collectionView(collectionView: JSQMessagesCollectionView!, layout collectionViewLayout: JSQMessagesCollectionViewFlowLayout!, heightForMessageBubbleTopLabelAtIndexPath indexPath: NSIndexPath!) -> CGFloat {
         let message = messages[indexPath.item]
         
@@ -129,7 +203,8 @@ extension MeetThreadViewController {
             }
         }
         
-        return kJSQMessagesCollectionViewCellLabelHeightDefault
+        //return kJSQMessagesCollectionViewCellLabelHeightDefault
+        return 20
     }
     
     override func collectionView(collectionView: JSQMessagesCollectionView!, messageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageData! {
@@ -151,16 +226,75 @@ extension MeetThreadViewController {
         }
     }
     
-    // display avatar image:
-    override func collectionView(collectionView: JSQMessagesCollectionView!, avatarImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageAvatarImageDataSource! {
-        return nil
+//    // display avatar image:
+//    override func collectionView(collectionView: JSQMessagesCollectionView!, avatarImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageAvatarImageDataSource! {
+//        return nil
+//    }
+    
+    // load earlier messages:
+    override func collectionView(collectionView: JSQMessagesCollectionView, header headerView: JSQMessagesLoadEarlierHeaderView!, didTapLoadEarlierMessagesButton sender: UIButton!) {
+        // load 10 earlier messages:
+        let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&accessToken=poop&start=\(self.count)&count=\(self.count + 10)"
+        let oldBottomOffset = self.collectionView.contentSize.height - self.collectionView.contentOffset.y
+        self.showLoadEarlierMessagesHeader = false
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        Alamofire.request(.GET, url) .responseJSON { response in
+            if let JSON = response.result.value {
+
+                if (JSON["error"] != nil) {
+                    // handle this!
+                }
+                
+                // should be obtained in decreasing order of timestamp:
+                let chatMessages = JSON["messages"] as? NSMutableArray
+                
+                // if nothing, pass.
+                if (chatMessages == nil || chatMessages!.count == 0) {
+                    CATransaction.commit()
+                    return
+                }
+                
+                for message in (chatMessages! as NSArray as! [AnyObject]) {
+                    // now create a JSQMessage object and append to the messages list:
+                    self.messages.insert(self.getJSQMessageForChatMessage(message), atIndex: 0)
+                }
+                
+                // reload the messages:
+                self.reloadMessagesView()
+                
+                // scroll back to current position:
+                self.finishReceivingMessageAnimated(false)
+                self.collectionView.layoutIfNeeded()
+                self.collectionView.contentOffset = CGPointMake(0, self.collectionView.contentSize.height - oldBottomOffset)
+                CATransaction.commit()
+                self.showLoadEarlierMessagesHeader = true
+                
+                // update start and count:
+                self.start = self.count;
+                self.count += self.messages.count
+            }
+        }
     }
     
-    func sendMesage(message: String?) {
+    
+    func sendMesage(message: String) {
         print("sending message to the server: \(message)")
+        let url = "https://one-mile.herokuapp.com/chat"
+        Alamofire.request(.POST, url,
+            parameters: [
+                "message": message,
+                "accessToken": "poop",
+                "meetId": self.meetId!
+            ])
+            .responseJSON { response in
+                print("chat response: \(response)")
+        }
     }
     
     override func didPressSendButton(button: UIButton!, withMessageText text: String!, senderId: String!, senderDisplayName: String!, date: NSDate!) {
+        print("senderId: \(senderId)")
         let message = JSQMessage(senderId: senderId, senderDisplayName: senderDisplayName, date: date, text: text)
         self.messages += [message]
         self.finishSendingMessage()
@@ -173,6 +307,9 @@ extension MeetThreadViewController {
     override func didPressAccessoryButton(sender: UIButton!) {
         
     }
+    
+    
+
 }
 
 

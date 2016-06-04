@@ -55,7 +55,6 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         
         // now update the MapCell:
         self.tableView.reloadRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: UITableViewRowAnimation.None)
-        
     }
     
     override func viewDidLoad() {
@@ -63,7 +62,6 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         tableView.registerNib(UINib(nibName: "MeetInfo", bundle: nil), forCellReuseIdentifier: "MeetInfoCell")
         
         // some tableView styling:
-        tableView.contentInset = UIEdgeInsetsMake(44,0,0,0);
         tableView.separatorStyle = .None
         tableView.backgroundColor = UIColor.blackColor()
         tableView.allowsSelection = false;
@@ -103,7 +101,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         if ((self.meetId) != nil) {
             let url = "https://one-mile.herokuapp.com/get_meet?id=\(self.meetId!)&userId=\(self.dummyUserId)"
             
-            print("about to fetchMeet()!")
+            print("about to fetchMeet() \(url)!")
             Alamofire.request(.GET, url) .responseJSON { response in
                 if let JSON = response.result.value {
                     // TODO: handle the error case!!
@@ -130,7 +128,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                 
                 // TODO: testing right now, remove this:
                 let poop = JSON["attendees"]! as! NSMutableArray!
-                self.attendees = NSMutableArray(array: [poop[0], poop[0], poop[0], poop[0], poop[0]])
+                self.attendees = poop
                 
                 //self.attendees = JSON["attendees"]! as! NSMutableArray!
                 self.isAttendeesLoading = false
@@ -151,7 +149,6 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         self.refreshControl?.endRefreshing()
     }
     
-
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -245,14 +242,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
             let hostName = (self.meet!["createdBy"]!!["name"]! as! String!)
             let picUrl = self.meet!["createdBy"]!!["pictureUrl"] as! String!
             let duration = self.meet!["duration"]! as! Int!
-            
             let startTime = self.meet!["startTime"] as! String!
-            
-//
-//            print("startTime: \(startTime)")
-//            print("endTime: \(endTime)")
-//            print("long: \(long)")
-//            print("lat: \(lat)")
             
             cell.titleLabel.text = title
             cell.hostLabel.text = hostName
@@ -260,7 +250,8 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
             let meetDate = Util.convertUTCTimestampToDate(startTime)
             let comps = Util.getComps(meetDate)
             
-            cell.dayLabel.text = NSCalendar.currentCalendar().isDateInToday(meetDate) ? "today" : "tomorrow"
+            cell.dayLabel.text = Util.getDay(meetDate)
+            
             cell.timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
             cell.durationLabel.text = Util.getDurationText(duration)
             cell.descriptionLabel.text = description

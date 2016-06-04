@@ -29,6 +29,12 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // styling the navigation bar:
+        self.navigationItem.rightBarButtonItem?.tintColor = Util.getMainColor()
+        self.navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
+        
+        // setup:
         self.editDoneButton.hidden = true
         self.userDescTextView.hidden = true
         self.userDescTextView.delegate = self
@@ -50,7 +56,6 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
         return textView.text.characters.count + (text.characters.count - range.length) <= maxtext
     }
 
-    
     // either "edit" / "done":
     @IBAction func onPress(sender: UIButton) {
         if (viewMode) {

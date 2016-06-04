@@ -70,6 +70,8 @@ extension UpcomingCell : UICollectionViewDataSource {
         
         cell.backgroundColor = UIColor.orangeColor()
         cell.layer.cornerRadius = 5.0
+        cell.layer.borderColor = UIColor.lightGrayColor().CGColor
+        cell.layer.borderWidth = 0.3
         
         let meet = self.meets![indexPath.row]
         
@@ -79,14 +81,19 @@ extension UpcomingCell : UICollectionViewDataSource {
             titleLabel.text = meet["meet"]!!["title"]! as! String!
         }
         
+        if let dayLabel = cell.viewWithTag(102) as? UILabel {
+            let meetTimeString = meet["startTime"]! as! String!
+            let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
+            dayLabel.text = NSCalendar.currentCalendar().isDateInToday(meetTime) ? "today" : "tomorrow"
+        }
+        
+        if let dayOuterView = cell.viewWithTag(103) as! UIView! {
+            dayOuterView.layer.cornerRadius = 5.0
+        }
+        
         if let timeLabel = cell.viewWithTag(101) as? UILabel {
-            
             let meetTime = Util.convertUTCTimestampToDate(meet["startTime"]! as! String!)
-            
-            // now getting just the time from this:
-            let allUnits = NSCalendarUnit(rawValue: UInt.max)
-            let comps = NSCalendar.currentCalendar().components(allUnits, fromDate: meetTime)
-            timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
+            timeLabel.text = Util.getUpcomingMeetTimestamp(meetTime)
         }
         
         return cell

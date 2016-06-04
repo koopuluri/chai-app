@@ -11,7 +11,7 @@ import Alamofire
 
 class ChatsViewController: UITableViewController {
     
-    var chatThreads: NSMutableArray?
+    var chatThreads: [ChatInfo] = []
     
     let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
     
@@ -34,11 +34,7 @@ class ChatsViewController: UITableViewController {
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete method implementation.
         // Return the number of rows in the section.
-        if self.chatThreads != nil {
-            return self.chatThreads!.count
-        } else {
-            return 0
-        }
+        return self.chatThreads.count
     }
     
     func startRefresh() {
@@ -49,6 +45,11 @@ class ChatsViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // styling navigation item:
+        self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
+        self.navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
+        
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         startRefresh()
     }
@@ -58,7 +59,7 @@ class ChatsViewController: UITableViewController {
         if let meetNavController = segue.destinationViewController as? MeetChatNavController {
             
             if let index = self.tableView.indexPathForSelectedRow?.row {
-                let meetId = chatThreads![index]["meet"]!!["_id"]! as! String!  // getting the meetId for the selected meet.
+                let meetId = chatThreads[index].meetId
                 let meetController = meetNavController.viewControllers.first as! MeetChatPageViewController
                 meetController.meetId = meetId
                 meetController.from = "Chats"
@@ -67,6 +68,14 @@ class ChatsViewController: UITableViewController {
             }
         }
     }
+    
+    func _setChatInfo(infos: [ChatInfo]) {
+        self.chatThreads = infos
+        
+        // reload:
+        self.tableView.reloadData()
+        self.refreshControl?.endRefreshing()
+    }
 
     
     func handleRefresh(refreshControl: UIRefreshControl) {
@@ -74,28 +83,8 @@ class ChatsViewController: UITableViewController {
         // TODO: currently using dummy:
         
         // Pulling meets from the server:
-        let url = "https://one-mile.herokuapp.com/user_chats?userId=\(self.dummyUserId)&start=\(start)&count=\(count)"
-        
-        Alamofire.request(.GET, url) .responseJSON { response in
-            
-            if let JSON = response.result.value {
-                if (JSON["error"]! != nil) {
-                    
-                    // display a UIAlertView with message:
-                    let alert = UIAlertController(title: ":(", message: (JSON["error"]! as! String!), preferredStyle: UIAlertControllerStyle.Alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
-                    self.presentViewController(alert, animated: true, completion: nil)
-                    return
-                }
-                
-                // All clear:
-                self.chatThreads = JSON["results"]! as? NSMutableArray
-                self.tableView.reloadData()
-                self.refreshControl?.endRefreshing()
-            }
-        }
+        API.getUserChats(start, count: count, callback: _setChatInfo)
     }
-
     
     @IBAction func unwindChats(segue: UIStoryboardSegue) {}
     
@@ -104,37 +93,21 @@ class ChatsViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCellWithIdentifier("ThreadCell", forIndexPath: indexPath)
         
-        let thread = self.chatThreads![indexPath.row]
+        let chatInfo = self.chatThreads[indexPath.row]
 
-        // getting the times for when the chat was opened and the last chat message: compared to see if user has seen the last
-        // message or not:
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        
-        let lastChatTime = dateFormatter.dateFromString(thread["meet"]!!["lastChatMessage"]!!["timestamp"]! as! String!)
-        let lastOpenedTime = dateFormatter.dateFromString(thread["lastOpenedChat"]! as! String!)
-        var isSeen = lastChatTime!.compare(lastOpenedTime!) == NSComparisonResult.OrderedAscending
-        
-        let title = thread["meet"]!!["title"]! as! String!
-        //let authorFirstName = thread["meet"]!!["lastChatMessage"]!!["author"]!!["firstName"]! as! String!
-        let authorFirstName = "gottaFix"
-        let content = thread["meet"]!!["lastChatMessage"]!!["content"]! as! String!
-        
-        // randomly setting isSeen to test out UI: TODO: REMOVE THIS!
-        isSeen = arc4random_uniform(2) == 0 ? true: false
-        
-        if  isSeen{
+        if  chatInfo.isSeen {
         
             if let titleLabel = cell.viewWithTag(100) as? UILabel {
-                titleLabel.text = title
+                titleLabel.text = chatInfo.meetTitle
             }
             
             if let timeLabel = cell.viewWithTag(101) as? UILabel {
-                timeLabel.text = String(lastChatTime!)
+                timeLabel.text = Util.getChatTimestamp(chatInfo.lastMessageTime)
             }
         
             if let lastCommentLabel = cell.viewWithTag(103) as? UILabel {
-                lastCommentLabel.text = authorFirstName + ": " + content
+                lastCommentLabel.text = chatInfo.authorName + ": " + chatInfo.lastMessageContent
+                lastCommentLabel.textColor = UIColor.blackColor()
             }
             
             return cell
@@ -143,19 +116,19 @@ class ChatsViewController: UITableViewController {
             // if unread --> title is bolder, time color is blue, 
             // lastAuthor color is blue, message color is black:
             if let titleLabel = cell.viewWithTag(100) as? UILabel {
-                titleLabel.text = title
+                titleLabel.text = chatInfo.meetTitle
                 titleLabel.textColor = UIColor.blackColor()
                 titleLabel.font = UIFont.boldSystemFontOfSize(titleLabel.font.pointSize)
             }
             
             if let timeLabel = cell.viewWithTag(101) as? UILabel {
-                timeLabel.text = String(lastChatTime!)
+                timeLabel.text = Util.getChatTimestamp(chatInfo.lastMessageTime)
                 timeLabel.textColor = UIColor.orangeColor()
             }
             
             
             if let lastCommentLabel = cell.viewWithTag(103) as? UILabel {
-                lastCommentLabel.text = authorFirstName + ": " + content
+                lastCommentLabel.text = chatInfo.authorName + ": " + chatInfo.lastMessageContent
                 lastCommentLabel.textColor = UIColor.blackColor()
             }
             
