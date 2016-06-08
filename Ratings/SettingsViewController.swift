@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+import FBSDKLoginKit
 
 class SettingsViewController: UITableViewController, UITextViewDelegate {
     
@@ -26,6 +27,16 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
     }
     
     var viewMode = true
+    
+    @IBAction func logout(sender: UIButton) {
+        FBSDKLoginManager().logOut()
+        
+        // pop this viewController off!
+        let signupController = storyboard?.instantiateViewControllerWithIdentifier("SignupController")
+        self.presentViewController(signupController!, animated: true, completion: nil)
+        //self.parentViewController?.navigationController?.dismissViewControllerAnimated(false, completion: nil)
+        self.dismissViewControllerAnimated(false, completion: nil)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +73,7 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
             // toggle to edit mode:
             self.userDescLabel.hidden = true
             self.userDescTextView.hidden = false
+            self.userDescTextView.becomeFirstResponder()
             self.userDescTextView.text = userDescLabel.text
             self.editDoneButton.setTitle("done", forState: UIControlState.Normal)
             self.viewMode = false
@@ -70,52 +82,34 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
             self.userDescLabel.text = self.userDescTextView.text
             self.userDescLabel.hidden = false
             self.userDescTextView.hidden = true
+            self.userDescTextView.resignFirstResponder()
             self.editDoneButton.setTitle("edit", forState: UIControlState.Normal)
             self.viewMode = true
             
-            // making call to server to update:
-            let url = "https://one-mile.herokuapp.com/edit_user_description"
-            Alamofire.request(.POST, url,
-                parameters: [
-                    "description": self.userDescTextView.text
-                ])
-                .responseJSON { response in
-                    if let JSON = response.result.value {
-                        if (JSON["error"]! != nil)  {
-                            print("well, couldn't update user description... \(JSON["error"]! as! String!)")
-                        } else {
-                            print("updated user description!")
-                        }
-                    }
-            }
+            // making call to server to update user desc:
+            API.editUserDescription(self.userDescTextView.text)
         }
     }
     
     
     // displays user avatar, name and description:
     func fetchUserInfo() {
-        let url = "https://one-mile.herokuapp.com/user_info"
-        print("fetchUserInfo: \(url)")
-        Alamofire.request(.GET, url) .responseJSON { response in
-            print("got response! - fetchUserInfo()")
-            if let JSON = response.result.value {
-                print(JSON)
-
-                self.name = JSON["name"]! as! String!
-                self.desc = JSON["description"]! as! String!
-                self.pictureUrl = JSON["pictureUrl"]! as! String!
-                
-                self.userDescLabel.text = self.desc
-                self.userName.text = self.name
-                
-                // set the image
-                Util.setAvatarImage(self.pictureUrl!, avatarImage: self.avatarImage)
-                
-                self.editDoneButton.hidden = false
-                
-            }
+        print("fetchUserInfo()")
+        func onUserReceived(user: Peep) {
+            self.name = user.name
+            self.desc = user.description
+            self.pictureUrl = user.pictureUrl
+            
+            self.userDescLabel.text = self.desc
+            self.userName.text = self.name
+            
+            // set the image
+            Util.setAvatarImage(self.pictureUrl!, avatarImage: self.avatarImage)
+            
+            self.editDoneButton.hidden = false
         }
         
+        API.getUserInfo(onUserReceived)
     }
 
     override func didReceiveMemoryWarning() {

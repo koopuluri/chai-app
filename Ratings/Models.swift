@@ -9,19 +9,48 @@
 import Foundation
 import MapKit
 
+
+class Peep {
+    var _id: String?
+    var name: String?
+    var email: String?
+    var pictureUrl: String?
+    var description: String?
+    
+    init(_id: String) {
+        self._id = _id
+    }
+    
+    init() {
+        
+    }
+}
+
 class Meet {
     var _id: String
     var startTime: NSDate
-    var loc: CLLocationCoordinate2D
-    var locAddress: String
-    var locName: String
-    var title: String
-    var description: String
-    var count: Int
-    var maxCount: Int
-    var duration: Int
+    var loc: CLLocationCoordinate2D?
+    var locAddress: String?
+    var locName: String?
+    var title: String?
+    var description: String?
+    var count: Int?
+    var maxCount: Int?
+    var duration: Int?
+    var createdBy: Peep?
     
-    init(_id: String, title: String, description: String, startTime: NSDate, duration: Int, count: Int, maxCount: Int, loc: CLLocationCoordinate2D, locName: String, locAddress: String) {
+    init(_id: String, title: String, startTime: NSDate, duration: Int, count: Int, maxCount: Int, createdBy: Peep) {
+        self._id = _id
+        self.title = title
+        self.startTime = startTime
+        self.duration = duration
+        self.count = count
+        self.maxCount = maxCount
+        
+        self.createdBy = createdBy
+    }
+    
+    init(_id: String, title: String, description: String, startTime: NSDate, duration: Int, count: Int, maxCount: Int, loc: CLLocationCoordinate2D, locName: String, locAddress: String, createdBy: Peep) {
         self._id = _id
         self.startTime = startTime
         self.duration = duration
@@ -32,6 +61,7 @@ class Meet {
         self.description = description
         self.count = count
         self.maxCount = maxCount
+        self.createdBy = createdBy
     }
 }
 

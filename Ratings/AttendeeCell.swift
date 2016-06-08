@@ -12,7 +12,8 @@ class AttendeeCell: UITableViewCell  {
     
     @IBOutlet weak var collectionView: UICollectionView!
     
-    var attendeesForRow: NSMutableArray?
+    var attendeesForRow: ArraySlice<Peep>?
+    var meetId: String?
     
     @IBOutlet weak var loadingSpinner: UIActivityIndicatorView!
     var parentController: MeetController?
@@ -41,9 +42,7 @@ extension AttendeeCell: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
         
-        print("AttendeeCell delegate collecitonView thing: \(self.attendeesForRow)")
         if (self.attendeesForRow != nil) {
-            print("AttendeeCell: going to render 1!!! \(self.attendeesForRow!.count)")
             return self.attendeesForRow!.count
         } else {
             return 0
@@ -56,33 +55,40 @@ extension AttendeeCell: UICollectionViewDelegate, UICollectionViewDataSource {
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("attendeeCell",
                                                                          forIndexPath: indexPath)
+        
+        let user = self.attendeesForRow![indexPath.row]
         // setting default values for the user: TODO: change!!
         if let nameLabel = cell.viewWithTag(100) as? UILabel {
-            nameLabel.text = "Foo Bar"
+            nameLabel.text = user.name
         }
         
         if let avatarImage = cell.viewWithTag(101) as? UIImageView {
-            let picUrl = "https://scontent.xx.fbcdn.net/hprofile-xpf1/v/t1.0-1/p50x50/12509882_565775596928323_668499748259808876_n.jpg?oh=4733ef1dc8bc40849533f84e82e8a5a3&oe=57BA0EA0"
-            
-            Util.setAvatarImage(picUrl, avatarImage: avatarImage)
+
+            Util.setAvatarImage(user.pictureUrl!, avatarImage: avatarImage)
         }
         return cell
     }
     
     
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        print("collectionView click: \(indexPath)")
+    func onRemovalComplete(index: Int) -> (() -> Void) {
+        func remove() {
+            self.attendeesForRow?.removeAtIndex(index)
+            
+            // make call to server to remove:
+            API.removeUserFromMeet(self.meetId!, attendeeId: self.attendeesForRow![index]._id!, callback: nil)
+        }
         
-        //let userId = attendeesForRow![indexPath.row]["_id"]! as! String!
-        
-        
-//        let userModalVC = UserModalViewController()
-//        userModalVC.view.backgroundColor = UIColor.clearColor()
-//        userModalVC.userId = userId
-        
-        self.parentController!.modalPresentationStyle = UIModalPresentationStyle.CurrentContext
-        //self.parentController!.presentViewController(userModalVC, animated: true, completion: nil)
-        self.parentController!.performSegueWithIdentifier("UserModalSegue", sender: nil)
+        return remove
+    }
+    
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {        
+        let userId = attendeesForRow![indexPath.row]._id
+        let userModalVC = (self.parentController!.storyboard?.instantiateViewControllerWithIdentifier("UserModal") as! UserModalViewController)
+        userModalVC.userId = userId
+        userModalVC.onRemoval = self.onRemovalComplete(indexPath.row)
+        userModalVC.modalPresentationStyle = .OverCurrentContext
+        self.parentController!.presentViewController(userModalVC, animated: true, completion: nil)
     }
 }
 

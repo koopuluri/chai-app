@@ -9,6 +9,7 @@
 import UIKit
 import Alamofire
 import MapKit
+import FBSDKLoginKit
 
 class MeetController: UITableViewController, CLLocationManagerDelegate {
     
@@ -17,10 +18,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
     var meetId: String?
     var meet: AnyObject?
     
-    let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
-    
-    var isCurrentUserHost = false
-    var isCurrentUserAttendee = false
+    var meetLocation: CLLocationCoordinate2D?
     
     // if loading, then spinner is displayed for the attendeeCell:
     var isAttendeesLoading = true
@@ -33,7 +31,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
     
     var currentLocation: CLLocationCoordinate2D?
     
-    var attendees: NSMutableArray?
+    var attendees: [Peep] = []
     
     var people: [[UIColor]] = [
         [UIColor.redColor(), UIColor.redColor(), UIColor.redColor(), UIColor.redColor()],
@@ -99,15 +97,19 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
     func handleRefresh(refreshControl: UIRefreshControl) {
         // Pulling meet from server
         if ((self.meetId) != nil) {
-            let url = "https://one-mile.herokuapp.com/get_meet?id=\(self.meetId!)&userId=\(self.dummyUserId)"
+            let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
+            let url = "https://one-mile.herokuapp.com/get_meet?id=\(self.meetId!)&accessToken=\(accessToken)"
             
             print("about to fetchMeet() \(url)!")
             Alamofire.request(.GET, url) .responseJSON { response in
                 if let JSON = response.result.value {
                     // TODO: handle the error case!!
                     self.meet = JSON["meet"]
-                    self.isCurrentUserAttendee = (JSON["isAttending"]! as! Bool!)
-                    self.isCurrentUserHost = (JSON["isHost"]! as! Bool!)
+                    
+                    let lat = JSON["lat"]! as! Float!
+                    let long = JSON["long"]! as! Float!
+                    
+                    self.meetLocation = CLLocationCoordinate2D(latitude: CLLocationDegrees(lat), longitude: CLLocationDegrees(long))
                     self.setTheMeet()
                     self.stopRefresh()
                 }
@@ -117,26 +119,20 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         }
     }
     
-    func fetchAttendees() {
-        let url = "https://one-mile.herokuapp.com/meet_attendees?meetId=\(self.meetId!)&accessToken=poop"
-        print("fetchAttendees url: \(url)")
+    func _onAttendeesReceived(users: [Peep]) {
+        // TODO: testing right now, remove this:
+        self.attendees = users
         
+        //self.attendees = JSON["attendees"]! as! NSMutableArray!
+        self.isAttendeesLoading = false
+        
+        // reload the attendee section:
+        self.tableView.reloadSections(NSIndexSet(index: 3), withRowAnimation: UITableViewRowAnimation.Automatic)
+    }
+    
+    func fetchAttendees() {
         self.isAttendeesLoading = true
-        Alamofire.request(.GET, url) .responseJSON { response in
-            if let JSON = response.result.value {
-                // TODO: handle the error case:
-                
-                // TODO: testing right now, remove this:
-                let poop = JSON["attendees"]! as! NSMutableArray!
-                self.attendees = poop
-                
-                //self.attendees = JSON["attendees"]! as! NSMutableArray!
-                self.isAttendeesLoading = false
-                
-                // reload the attendee section:
-                self.tableView.reloadSections(NSIndexSet(index: 3), withRowAnimation: UITableViewRowAnimation.Automatic)
-            }
-        }
+        API.getMeetAttendees(self.meetId!, callback: self._onAttendeesReceived)
     }
 
     func startRefresh() {
@@ -162,7 +158,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                 return 1
             }
             
-            let numAttendeeRows = Int(ceil(Double((attendees?.count)!) / 3.0))
+            let numAttendeeRows = Int(ceil(Double((attendees.count)) / 3.0))
             print("numAttendeesRows: \(numAttendeeRows)")
             return numAttendeeRows
             
@@ -195,12 +191,13 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                 
                 let totalCount = index*3 + 3
                 var count = 3
-                if (totalCount > self.attendees?.count) {
-                    count = (self.attendees?.count)! - index*3
+                if (totalCount > self.attendees.count) {
+                    count = (self.attendees.count) - index*3
                 }
                 
-                let subArr = self.attendees?.subarrayWithRange(NSMakeRange(index*3, count)) as! NSMutableArray
-                attendeeCell.attendeesForRow = subArr
+                let sub = self.attendees[index*3..<count]
+                attendeeCell.attendeesForRow = sub
+                attendeeCell.meetId = self.meetId
                 attendeeCell.setDataSource()
             }
             attendeeCell.parentController = self
@@ -242,17 +239,16 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
             let hostName = (self.meet!["createdBy"]!!["name"]! as! String!)
             let picUrl = self.meet!["createdBy"]!!["pictureUrl"] as! String!
             let duration = self.meet!["duration"]! as! Int!
-            let startTime = self.meet!["startTime"] as! String!
+            let startTimeString = self.meet!["startTime"] as! String!
             
             cell.titleLabel.text = title
             cell.hostLabel.text = hostName
             
-            let meetDate = Util.convertUTCTimestampToDate(startTime)
+            let meetDate = Util.convertUTCTimestampToDate(startTimeString)
             let comps = Util.getComps(meetDate)
             
             cell.dayLabel.text = Util.getDay(meetDate)
-            
-            cell.timeLabel.text = Util.getTimeString(comps.hour, min: comps.minute)
+            cell.timeLabel.text = Util.getUpcomingMeetTimestamp(meetDate)
             cell.durationLabel.text = Util.getDurationText(duration)
             cell.descriptionLabel.text = description
             
@@ -288,18 +284,12 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
             
             if ((self.currentLocation) != nil) {
                 // set the cell with the locations of user and meet:
-                let long = self.meet!["loc"]!![0] as! Float!
-                let lat = self.meet!["loc"]!![1] as! Float!
-                
                 let locationAddress = self.meet!["locationAddress"]! as! String!
                 let locationName = self.meet!["locationName"]! as! String!
                 
-                let meetLocation = CLLocationCoordinate2D(latitude: CLLocationDegrees(lat), longitude: CLLocationDegrees(long))
-                
-                print("setting mapView! \(lat), \(long)")
                 mapCell.setMap(
                     self.currentLocation,
-                    meetLocation: meetLocation,
+                    meetLocation: self.meetLocation!,
                     meetLocationName: locationName,
                     meetLocationAddress: locationAddress
                 )

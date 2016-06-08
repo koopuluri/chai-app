@@ -126,56 +126,35 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         
         // combining information and sending to server:
         // make the call:
-        let url = "https://one-mile.herokuapp.com/create_meet"
-        
         print("title: \(titleTextField.text!)")
         print("description: \(descriptionTextView.text)")
         print("maxAttendees: \(maxAttendees)")
         print("duration: \(duration)")
         print("loc.coords: \(locInfo?.coords)")
         print("loc.address: \(locInfo?.address)")
+
         
-        Alamofire.request(.POST, url,
-            parameters: [
-                "title": self.titleTextField.text!,
-                "description": self.descriptionTextView.text,
-                "maxAttendees": maxAttendees!,
-                "duration": duration,
-                "timestamp": self.meetTimestamp,
-                "loc.lat": (self.locInfo!.coords?.latitude)!,
-                "loc.long": (self.locInfo!.coords?.longitude)!,
-                "loc.name": self.locInfo!.name!,
-                "loc.address": self.locInfo!.address!
-            ])
-            .responseJSON { response in
-                
-                // setting isJoining to false (must be true right now, or we wouldn't be here);
-                print("handling the returned thing from Request");
-                
-                if let JSON = response.result.value {
-                    
-                    if (JSON["error"]! != nil) {
-                        
-                        // replacing the loading spinner with the submit button again:
-                        self.submitSpinner.hidden = true
-                        self.submitButton.hidden = false
-                        
-                        // un-disabling the form:
-                        self.enableForm()
-                        
-                        // display a UIAlertView with message:
-                        let alert = UIAlertController(title: ":(", message: (JSON["error"]! as! String!), preferredStyle: UIAlertControllerStyle.Alert)
-                        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
-                        self.presentViewController(alert, animated: true, completion: nil)
-                    } else {
-                        
-                        self.newMeetId = JSON["savedMeetId"]! as! String!
-                        
-                        // programmatically seguing to the meetController to render the just created meet:
-                        self.performSegueWithIdentifier("NewMeetSegue", sender: self)
-                    }
-                }
+        func success(meetId: String) {
+            self.newMeetId = meetId
+            self.performSegueWithIdentifier("NewMeetSegue", sender: self)
         }
+        
+        func fail(error: String) {
+            // replacing the loading spinner with the submit button again:
+            self.submitSpinner.hidden = true
+            self.submitButton.hidden = false
+            
+            // un-disabling the form:
+            self.enableForm()
+            
+            // display a UIAlertView with message:
+            let alert = UIAlertController(title: ":(", message: error, preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+        }
+        
+        API.createMeet(self.titleTextField.text!, desc: self.descriptionTextView.text, maxAttendees: maxAttendees!, duration: duration, time: self.meetTimestamp, loc: self.locInfo!.coords!, locName: (self.locInfo?.name)!, locAddress: (self.locInfo?.address)!, success: success, fail: fail)
+
     }
     
     // takes coords and gives name and address for a location:

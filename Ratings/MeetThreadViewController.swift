@@ -11,6 +11,7 @@ import Foundation
 import JSQMessagesViewController
 import Alamofire
 import SocketIOClientSwift
+import FBSDKLoginKit
 
 // extends JSQMessagesViewController to provide chat UI. 
 class MeetThreadViewController: JSQMessagesViewController{
@@ -76,6 +77,7 @@ class MeetThreadViewController: JSQMessagesViewController{
             username = "meet-bot"
         }
         
+        print("JSQPoopMEssage: \(userId) - \(username)")
         return JSQMessage(senderId: userId, senderDisplayName: username, date: messageTime, text: text)
     }
     
@@ -109,7 +111,8 @@ class MeetThreadViewController: JSQMessagesViewController{
     }
     
     func fetchMessages() {
-        let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&accessToken=poop&start=\(self.start)&count=\(self.count)"
+        let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
+        let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&start=\(self.start)&count=\(self.count)&accessToken=\(accessToken)"
         
         print("getChatMessagesForMeet url: \(url)")
         
@@ -234,7 +237,8 @@ extension MeetThreadViewController {
     // load earlier messages:
     override func collectionView(collectionView: JSQMessagesCollectionView, header headerView: JSQMessagesLoadEarlierHeaderView!, didTapLoadEarlierMessagesButton sender: UIButton!) {
         // load 10 earlier messages:
-        let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&accessToken=poop&start=\(self.count)&count=\(self.count + 10)"
+        let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
+        let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&start=\(self.count)&count=\(self.count + 10)&accessToken=\(accessToken)"
         let oldBottomOffset = self.collectionView.contentSize.height - self.collectionView.contentOffset.y
         self.showLoadEarlierMessagesHeader = false
         
@@ -280,17 +284,7 @@ extension MeetThreadViewController {
     
     
     func sendMesage(message: String) {
-        print("sending message to the server: \(message)")
-        let url = "https://one-mile.herokuapp.com/chat"
-        Alamofire.request(.POST, url,
-            parameters: [
-                "message": message,
-                "accessToken": "poop",
-                "meetId": self.meetId!
-            ])
-            .responseJSON { response in
-                print("chat response: \(response)")
-        }
+        API.chat(message, meetId: self.meetId!)
     }
     
     override func didPressSendButton(button: UIButton!, withMessageText text: String!, senderId: String!, senderDisplayName: String!, date: NSDate!) {

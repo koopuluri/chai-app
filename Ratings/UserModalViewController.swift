@@ -9,11 +9,14 @@
 import UIKit
 import Alamofire
 
-class UserModalViewController: UIViewController {
+class UserModalViewController: UIViewController, UIGestureRecognizerDelegate {
     
     
-    var userId = "57129ebcedd2393b22395684"
+    var userId: String?
+    var meetId: String?
     var canRemoveFromMeet = true
+    
+    var onRemoval: (() -> Void)?
     
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var loadingSpinner: UIActivityIndicatorView!
@@ -28,6 +31,11 @@ class UserModalViewController: UIViewController {
         self.dismissViewControllerAnimated(true, completion: {});
     }
     
+    func gestureRecognizer(_: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWithGestureRecognizer:UIGestureRecognizer) -> Bool {
+        print("gestureRecognized")
+        return true
+    }
     
     @IBOutlet weak var userDescriptionLabel: UILabel!
     
@@ -46,6 +54,7 @@ class UserModalViewController: UIViewController {
         self.view.backgroundColor = UIColor.clearColor()
         self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
         
+        canRemoveFromMeet = Util.CURRENT_USER_ID != self.userId!
         if (!canRemoveFromMeet) {
             
             // don't give option to remove user:
@@ -53,6 +62,16 @@ class UserModalViewController: UIViewController {
         }
         
         fetchAndSetUser()
+        
+        view.backgroundColor = UIColor.clearColor()
+        
+        let exitTap = UITapGestureRecognizer(target: self, action: Selector("dismiss"))
+        exitTap.delegate = self
+        view.addGestureRecognizer(exitTap)
+    }
+    
+    func dismiss() {
+        dismissViewControllerAnimated(true, completion: nil)
     }
     
     // fetches user information and sets it in the view
@@ -61,38 +80,27 @@ class UserModalViewController: UIViewController {
         // start the spinner:
         self.loadingSpinner.startAnimating()
         
-        let url = "https://one-mile.herokuapp.com/user_info?userId=\(self.userId)&accessToken=doesntmatterigtnow"
-        
-        Alamofire.request(.GET, url) .responseJSON { response in
+        func onUserReceived(user: Peep) {
+            // setting the respective views:
+            self.nameLabel.hidden = false
+            self.nameLabel.text = user.name
             
-            if let JSON = response.result.value {
-                let picUrl = JSON["pictureUrl"]! as! String!
-                let description = JSON["description"]! as! String!
-                let name = JSON["name"]! as! String!
-                
-                print("get User info results:")
-                print(picUrl)
-                print(description)
-                print(name)
-                
-                // setting the respective views:
-                self.nameLabel.hidden = false
-                self.nameLabel.text = name
-                
-                self.userDescriptionLabel.hidden = false
-                self.userDescriptionLabel.text = description
-                
-                self.avatarImage.hidden = false
-                Util.setAvatarImage(picUrl, avatarImage: self.avatarImage)
-            }
+            self.userDescriptionLabel.hidden = false
+            self.userDescriptionLabel.text = user.description
+            
+            self.avatarImage.hidden = false
+            Util.setAvatarImage(user.pictureUrl!, avatarImage: self.avatarImage)
             
             self.loadingSpinner.hidden = true
         }
+        
+        API.getUserInfo(onUserReceived)
     }
     
     
     @IBAction func removeUserFromMeet(sender: UIButton) {
         print("Remove user from meet!")
+        self.onRemoval!()
     }
     
     override func didReceiveMemoryWarning() {

@@ -6,40 +6,44 @@ import Alamofire
 
 class SignupController: UIViewController, FBSDKLoginButtonDelegate {
     
+    @IBOutlet weak var loginButton: FBSDKLoginButton!
+    @IBOutlet weak var loginSpinner: UIActivityIndicatorView!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
         
-        if (FBSDKAccessToken.currentAccessToken() != nil)
-        {
-            // User is already logged in, do work such as go to next view controller.
+        loginSpinner.hidesWhenStopped = true
+        
+        view.backgroundColor = Util.getMainColor()
+        
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        if (FBSDKAccessToken.currentAccessToken() != nil) {
+            print("already logged in. Going to MainController \(FBSDKAccessToken.currentAccessToken().tokenString)")
+            gotoMain()
             
-            // Or Show Logout Button
-            let loginView : FBSDKLoginButton = FBSDKLoginButton()
-            self.view.addSubview(loginView)
-            loginView.center = self.view.center
-            loginView.readPermissions = ["public_profile", "email"]
-            loginView.delegate = self
-            self.loginSignup()
+        } else {
+            self.loginButton.readPermissions = ["public_profile", "email"]
+            self.loginButton.delegate = self
         }
-        else
-        {
-            let loginView : FBSDKLoginButton = FBSDKLoginButton()
-            self.view.addSubview(loginView)
-            loginView.center = self.view.center
-            loginView.readPermissions = ["public_profile", "email"]
-            loginView.delegate = self
-        }
+    }
+    
+    func gotoMain() {
+        let mainNavController = storyboard?.instantiateViewControllerWithIdentifier("MainNavController")
+        API.fetchAndSetUserId()
+        self.presentViewController(mainNavController!, animated: true, completion: nil)
     }
     
     // Facebook Delegate Methods
     
     func loginButton(loginButton: FBSDKLoginButton!, didCompleteWithResult result: FBSDKLoginManagerLoginResult!, error: NSError!) {
-        print("User Logged In")
         
+        print("login()")
         if ((error) != nil)
         {
-            print("error! \(error)")
+            print("error logging in \(error)")
             // Process error
         }
         else if result.isCancelled {
@@ -49,35 +53,27 @@ class SignupController: UIViewController, FBSDKLoginButtonDelegate {
         else {
             // If you ask for multiple permissions at once, you
             // should check if specific permissions missing
-            if result.grantedPermissions.contains("email")
-            {
-                // Do work
+            if (result.grantedPermissions.contains("email") && result.grantedPermissions.contains("public_profile")) {
+                self.loginSignup()
+            } else {
+                print("both permissions required to login")
             }
-            
-            print("loginSignup() time!!!")
-            self.loginSignup()
         }
-        
     }
     
     func loginButtonDidLogOut(loginButton: FBSDKLoginButton!) {
         print("User Logged Out")
     }
     
-    func startLoading() {
-        
-    }
-    
-    func stopLoading() {
-        
-    }
-    
     func loginSignup() {
+        
+        loginSpinner.startAnimating()
+        
         let graphRequest : FBSDKGraphRequest = FBSDKGraphRequest(graphPath: "me", parameters: ["fields":"email, name"])
         graphRequest.startWithCompletionHandler({ (connection, result, error) -> Void in
             
             if ((error) != nil) {
-                // display a UIAlertView showing why it failed. And that's it..
+                print("error in graphRequest: \(error)")
             } else {
                 let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
                 
@@ -91,25 +87,20 @@ class SignupController: UIViewController, FBSDKLoginButtonDelegate {
                     if let JSON = response.result.value {
                         if (JSON["error"]! != nil) {
                             
-                            // need to explicitly end refreshing in this method because setTheMeet() not called in this conditional brach:
+                            print("errored in server login: \(JSON["error"]! as! String!)")
                             
                             // display a UIAlertView with message:
                             let alert = UIAlertController(title: ":(", message: (JSON["error"]! as! String!), preferredStyle: UIAlertControllerStyle.Alert)
                             alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
                             self.presentViewController(alert, animated: true, completion: nil)
                         } else {
-                            let isSignup = JSON["isSignup"]! as! Bool!
-                            print("isSignup: \(isSignup)")
-                            
-                            if (isSignup!) {
-                                // transition to the profile page to get description input...
-                                self.performSegueWithIdentifier("MainViewSegue", sender: nil)
-                            } else {
-                                // go straight to the main view controller...
-                                self.performSegueWithIdentifier("MainViewSegue", sender: nil)
-                            }
+                            print("successfuly logged in through the server!")
+                            API.fetchAndSetUserId()
                         }
                     }
+                    
+                    // stop the loading:
+                    self.loginSpinner.stopAnimating()
                 }
             }
         })

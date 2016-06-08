@@ -16,7 +16,7 @@ class UpcomingCell: UITableViewCell {
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
-    var meets: NSMutableArray?
+    var meets: [UpcomingMeet] = []
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -46,18 +46,13 @@ class UpcomingCell: UITableViewCell {
 extension UpcomingCell : UICollectionViewDataSource {
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if ((self.meets) != nil) {
-            print("UpcomingCell number of meets: \(self.meets!.count)")
-            return self.meets!.count
-        } else {
-            return 0
-        }
+        return meets.count
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         print("collectionView click: \(indexPath)")
         
-        self.parentTableViewController!.userMeetId = meets![indexPath.row]["meet"]!!["_id"]! as! String!
+        self.parentTableViewController!.userMeetId = meets[indexPath.row]._id
         print("UpcomingCell meet selected: \(self.parentTableViewController!.userMeetId)")
         
         self.parentTableViewController?.performSegueWithIdentifier("UserMeetSegue", sender: self.parentTableViewController)
@@ -73,18 +68,15 @@ extension UpcomingCell : UICollectionViewDataSource {
         cell.layer.borderColor = UIColor.lightGrayColor().CGColor
         cell.layer.borderWidth = 0.3
         
-        let meet = self.meets![indexPath.row]
+        let meet = self.meets[indexPath.row]
         
         // setting values for the cell (currently dummy, change later):
         if let titleLabel = cell.viewWithTag(100) as? UILabel {
-            print("setting upcoming meet title: \(meet["meet"]!!["title"]! as! String!)")
-            titleLabel.text = meet["meet"]!!["title"]! as! String!
+            titleLabel.text = meet.title
         }
         
         if let dayLabel = cell.viewWithTag(102) as? UILabel {
-            let meetTimeString = meet["startTime"]! as! String!
-            let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
-            dayLabel.text = NSCalendar.currentCalendar().isDateInToday(meetTime) ? "today" : "tomorrow"
+            dayLabel.text = NSCalendar.currentCalendar().isDateInToday(meet.time) ? "today" : "tomorrow"
         }
         
         if let dayOuterView = cell.viewWithTag(103) as! UIView! {
@@ -92,8 +84,7 @@ extension UpcomingCell : UICollectionViewDataSource {
         }
         
         if let timeLabel = cell.viewWithTag(101) as? UILabel {
-            let meetTime = Util.convertUTCTimestampToDate(meet["startTime"]! as! String!)
-            timeLabel.text = Util.getUpcomingMeetTimestamp(meetTime)
+            timeLabel.text = Util.getUpcomingMeetTimestamp(meet.time)
         }
         
         return cell

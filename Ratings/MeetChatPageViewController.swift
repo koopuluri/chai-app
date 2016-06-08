@@ -9,6 +9,7 @@
 import UIKit
 import Alamofire
 import SwiftyButton
+import FBSDKLoginKit
 
 class MeetChatPageViewController: UIPageViewController {
     //let meetId = "56e1b6f5fa3f0c01f45568cd"
@@ -22,6 +23,8 @@ class MeetChatPageViewController: UIPageViewController {
     var mode: String?
     
     var isMember = false
+    var isHost = false
+    var isMeetCancelled: Bool?
     
     @IBOutlet weak var titleButton: UIButton!
     @IBOutlet weak var titleSpinner: UIActivityIndicatorView!
@@ -34,6 +37,7 @@ class MeetChatPageViewController: UIPageViewController {
     let switchSegment = UISegmentedControl(items: ["info", "chat"])
     
     var pageIndex = 0
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -55,7 +59,11 @@ class MeetChatPageViewController: UIPageViewController {
         joinButton.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
         
         fetchAndSetUserMeetInfo()
+        
+        
+        self.titleButton.hidden = true
     }
+    
     
     // adding another page for ChatView:
     func addChatView() {
@@ -65,8 +73,19 @@ class MeetChatPageViewController: UIPageViewController {
     
     @IBAction func transitionMeetSettings(sender: UIButton) {
         if (self.isMember) {
-            performSegueWithIdentifier("MeetSettingsSegue", sender: self)
+            // present modally:
+            let modalViewController = self.storyboard?.instantiateViewControllerWithIdentifier("MeetSettingsModal") as! MeetSettingsModalViewController
+            modalViewController.isHost = self.isHost
+            modalViewController.meetId = self.meetId!
+            modalViewController.isMeetCancelled = self.isMeetCancelled
+            modalViewController.modalPresentationStyle = .OverCurrentContext
+            presentViewController(modalViewController, animated: true, completion: nil)
         }
+    }
+    
+    func setNavStyleForMeetCancelled() {
+        self.titleButton.setTitleColor(UIColor.redColor(), forState: UIControlState.Normal)
+        self.titleButton.setTitle("Meet Cancelled", forState: UIControlState.Normal)
     }
     
     func setNavStyleForMember() {
@@ -75,7 +94,9 @@ class MeetChatPageViewController: UIPageViewController {
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.whiteColor()
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.whiteColor()
         
+        self.titleButton.hidden = false
         self.titleButton.enabled = true
+        
         self.titleButton.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
     }
     
@@ -84,9 +105,15 @@ class MeetChatPageViewController: UIPageViewController {
         self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()
         self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
 
+        self.titleButton.hidden = false
         self.titleButton.enabled = false
         self.titleButton.setTitleColor(UIColor.darkGrayColor(), forState: UIControlState.Normal)
+        
+        if (self.isMeetCancelled!) {
+            self.joinButton.hidden = true
+        }
     }
+    
     
     // gets following info about user-meet:
     // - {isHost?, isAttendee?, meetTitle}
@@ -94,7 +121,8 @@ class MeetChatPageViewController: UIPageViewController {
     // on start - puts loading
     func fetchAndSetUserMeetInfo() {
         if ((self.meetId) != nil) {
-            let url = "https://one-mile.herokuapp.com/user_meet_info?meetId=\(self.meetId!)&userId=\(self.dummyUserId)"
+            let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
+            let url = "https://one-mile.herokuapp.com/user_meet_info?meetId=\(self.meetId!)&accessToken=\(accessToken)"
             
             print("fetchMeetInfoUrl: \(url)")
             
@@ -103,17 +131,16 @@ class MeetChatPageViewController: UIPageViewController {
                 if let JSON = response.result.value {
                     // TODO: handle the error case!!
 
-                    var isAttendee = (JSON["isAttending"]! as! Bool!)
-                    var isHost = (JSON["isHost"]! as! Bool!)
+                    self.isMember = (JSON["isAttending"]! as! Bool!)
+                    self.isHost = (JSON["isHost"]! as! Bool!)
+                    self.isMeetCancelled = (JSON["isCancelled"]! as! Bool!)
                     let meetTitle = (JSON["title"] as! String!)
                     
-                    print("isAttendee: \(isAttendee)")
-                    print("isHost: \(isHost)")
+                    print("isAttendee: \(self.isMember)")
+                    print("isHost: \(self.isHost)")
                     
                     // setting navbar:
-                    if (isHost || isAttendee) {
-                        
-                        self.isMember = true
+                    if (self.isHost || self.isMember) {
                         
                         // adding the chat view as another page:
                         self.addChatView()
@@ -133,9 +160,7 @@ class MeetChatPageViewController: UIPageViewController {
                             completion: nil)
                         
                         self.setNavStyleForMember()
-
                     } else {
-                        self.isMember = false
                         
                         // startView controller is the meetController:
                         let startController = self.orderedViewControllers[0]
@@ -147,8 +172,12 @@ class MeetChatPageViewController: UIPageViewController {
                         self.setNavStyleForNonMember()
                     }
                     
-                    // set the title to the meetTitle
-                    self.setTitleViewText(meetTitle)
+                    if (self.isMeetCancelled!) {
+                        self.setNavStyleForMeetCancelled()
+                    } else {
+                        // set the title to the meetTitle
+                        self.setTitleViewText(meetTitle)
+                    }
                 }
             }
         } else {
@@ -181,6 +210,7 @@ class MeetChatPageViewController: UIPageViewController {
         print("joining meet!")
         
         // making POST request to server to join meets:
+        let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
         let url = "https://one-mile.herokuapp.com/join_meet"
         print("joinMeet() url: \(url)")
         
@@ -189,7 +219,13 @@ class MeetChatPageViewController: UIPageViewController {
         startJoinSpinner()
         
         // making request to join current user to meet w/ id=self.meetId:
-        Alamofire.request(.POST, url, parameters: ["meetId": self.meetId!, "userId": self.dummyUserId]) .responseJSON { response in
+        Alamofire.request(.POST, url, parameters:
+            [
+                "accessToken": accessToken,
+                "meetId": self.meetId!,
+                "userId": self.dummyUserId
+            ])
+            .responseJSON { response in
             
             if let JSON = response.result.value {
                 if (JSON["error"]! != nil) {

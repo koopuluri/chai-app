@@ -22,8 +22,8 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     
     var meets: NSMutableArray?
     
-    var todayMeets: NSMutableArray?
-    var tomorrowMeets: NSMutableArray?
+    var todayMeets: [Meet] = []
+    var tomorrowMeets: [Meet] = []
     
     var start = 0
     var count = 10
@@ -40,7 +40,7 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     
     // keeps track of loading of user meets:
     var userMeetsLoading = true
-    var userMeets: NSMutableArray?
+    var userMeets: [UpcomingMeet] = []
     
     @IBAction func create(sender: AnyObject) {
         
@@ -102,9 +102,6 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             print("locationManager stuff set in viewdidLoad()")
         }
         
-        self.todayMeets = NSMutableArray()
-        self.tomorrowMeets = NSMutableArray()
-        
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
         startRefresh()
     }
@@ -118,68 +115,41 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     }
     
     
+    
     // if user's current location set, goes and fetches meets in the area:
     func fetchMeets() {
+        
         if (self.currentLocation != nil) {
-            // Pulling meets from the server:
-            let lat: String = "\(self.currentLocation!.latitude)"
-            let long: String = "\(self.currentLocation!.longitude)"
-            let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(long)&lat=\(lat)&start=\(start)&count=\(count)&accessToken=poop"
             
-            // reset today and tomorrow lists:
-            self.todayMeets = NSMutableArray()
-            self.tomorrowMeets = NSMutableArray()
-            
-            print("reloadMeetsFromServer: \(url)")
-            Alamofire.request(.GET, url) .responseJSON { response in
-                
-                if let JSON = response.result.value {
-                    let meets = JSON["meets"] as? NSMutableArray
-                    if (meets != nil) {
-                        for meet in (meets! as NSArray as! [AnyObject]) {
-                            
-                            let meetTimeString = meet["startTime"]! as! String!
-                            print("meettimeString: \(meetTimeString)")
-                            
-                            let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
-                            
-                            // if today, add to today's list, else tomorrow's:
-                            let isToday = NSCalendar.currentCalendar().isDateInToday(meetTime)
-                            if (isToday) {
-                                self.todayMeets!.addObject(meet)
-                                print("updated today meets: \(self.todayMeets!.count)")
-                            } else {
-                                self.tomorrowMeets!.addObject(meet)
-                                print("updated tomorrow's meets: \(self.tomorrowMeets!.count)")
-                            }
-                        }
-                    }
-                    
-                    print("reloading data with the following: \(self.todayMeets!.count) ; \(self.tomorrowMeets!.count)")
-                    self.tableView.reloadData()
-                    self.refreshControl?.endRefreshing()
-                }
+            // on receiving meets:
+            func onMeetsReceived(todayMeets: [Meet], tomrrowMeets: [Meet]) {
+                self.todayMeets = todayMeets
+                self.tomorrowMeets = tomrrowMeets
+                self.tableView.reloadData()
+                self.refreshControl?.endRefreshing()
             }
+            
+            // Pulling meets from the server:
+            API.getMeetsAtLocation(self.currentLocation!, start: self.start, count: self.count, callback: onMeetsReceived)
         }
+
     }
     
     
     // fetches all of the users meets (joined / hosting) that are upcoming:
     func fetchUserUpcomingMeets() {
-        let url = "https://one-mile.herokuapp.com/user_upcoming_meets?accessToken=poop"
-        
         self.userMeetsLoading = true
         
-        Alamofire.request(.GET, url) .responseJSON { response in
-            if let JSON = response.result.value {
-                self.userMeets = JSON["userMeets"] as? NSMutableArray
-                //print("obtained userMeets! \(self.userMeets!.count)")
-                self.userMeetsLoading = false
-                
-                // reloading the UpcomingMeets cell:
-                self.tableView.reloadRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: UITableViewRowAnimation.None)
-            }
+        func onUpcomingMeetsReceived(meets: [UpcomingMeet]) {
+            self.userMeets = meets
+            //print("obtained userMeets! \(self.userMeets!.count)")
+            self.userMeetsLoading = false
+            
+            // reloading the UpcomingMeets cell:
+            self.tableView.reloadRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: UITableViewRowAnimation.None)
         }
+        
+        API.getUpcomingMeets(onUpcomingMeetsReceived)
     }
     
     
@@ -214,10 +184,10 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
                         
                         var meetId: String?
                         if (section == 1) {
-                            meetId = self.todayMeets![index]["_id"]! as! String!  // getting the meetId for the selected meet.
+                            meetId = self.todayMeets[index]._id  // getting the meetId for the selected meet.
                         }
                         else if (section == 2){
-                            meetId = self.tomorrowMeets![index]["_id"] as! String!
+                            meetId = self.tomorrowMeets[index]._id
                         } else {
                             // woah there
                         }
@@ -269,17 +239,9 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         if (section == 0) {
             return 1
         } else if (section == 1) {
-            if (self.todayMeets != nil) {
-                return self.todayMeets!.count
-            } else {
-                return 0
-            }
+            return self.todayMeets.count
         } else {
-            if (self.tomorrowMeets != nil) {
-                return self.tomorrowMeets!.count
-            } else {
-                return 0
-            }
+            return self.tomorrowMeets.count
         }
     }
 
@@ -306,33 +268,25 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         }
         
         let cell = tableView.dequeueReusableCellWithIdentifier("MeetCell", forIndexPath: indexPath)
-    
-        var meet: AnyObject!
-        if (indexPath.section == 1) {
-            meet = todayMeets![indexPath.row]
-        } else if (indexPath.section == 2) {
-            print("cell fort tomorrow: \(indexPath.row)")
-            meet = tomorrowMeets![indexPath.row]
-        }
+        
+        var meet: Meet = (indexPath.section == 1) ? todayMeets[indexPath.row] : tomorrowMeets[indexPath.row]
         
         if let titleLabel = cell.viewWithTag(100) as? UILabel {
-            titleLabel.text = (meet["title"]! as! String!)
+            titleLabel.text = meet.title
         }
         
         if let hostLabel = cell.viewWithTag(101) as? UILabel {
-            //hostLabel.text = (meet["createdBy"]!!["firstName"]! as! String!)
-            hostLabel.text = "by: Karthik Uppuluri"
+            hostLabel.text = meet.createdBy?.name
         }
         
         if let timeLabel = cell.viewWithTag(102) as? UILabel {
-            let meetTimeString = meet["startTime"]! as! String!
-            let meetTime = Util.convertUTCTimestampToDate(meetTimeString)
+            let meetTime = meet.startTime
             timeLabel.text = Util.getUpcomingMeetTimestamp(meetTime)
             timeLabel.textColor = Util.getMainColor()
         }
         
         if let durationLabel = cell.viewWithTag(105) as? UILabel {
-            let duration = meet["duration"]! as! Int
+            let duration = meet.duration!
             print("obtained duration: \(duration)")
             durationLabel.text = Util.getDurationText(duration)
             durationLabel.textColor = Util.getMainColor()
@@ -355,13 +309,13 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         
         
         if let avatarImage = cell.viewWithTag(104) as? UIImageView {
-            let picUrl = "https://scontent.xx.fbcdn.net/hprofile-xpf1/v/t1.0-1/p50x50/12509882_565775596928323_668499748259808876_n.jpg?oh=4733ef1dc8bc40849533f84e82e8a5a3&oe=57BA0EA0"
-            Util.setAvatarImage(picUrl, avatarImage: avatarImage)
+            let picUrl = meet.createdBy?.pictureUrl!
+            Util.setAvatarImage(picUrl!, avatarImage: avatarImage)
         }
         
         if let countLabel = cell.viewWithTag(103) as? UILabel {
-            let count = (meet["count"]! as! Int!)
-            let maxCount = meet["maxCount"]! as! Int!
+            let count = meet.count!
+            let maxCount = meet.maxCount!
             
             countLabel.text = String(count) + "/" + String(maxCount)
         }

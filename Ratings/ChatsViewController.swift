@@ -12,9 +12,6 @@ import Alamofire
 class ChatsViewController: UITableViewController {
     
     var chatThreads: [ChatInfo] = []
-    
-    let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
-    
     var start = 0
     var count = 10
     
@@ -72,6 +69,9 @@ class ChatsViewController: UITableViewController {
     func _setChatInfo(infos: [ChatInfo]) {
         self.chatThreads = infos
         
+        print("_setChatInfo last(): \(self.chatThreads[0].isSeen) --> \(self.chatThreads[0].lastMessageContent)")
+        print("_setChatInfo infos.lasrt(): \(infos[0].isSeen) --> \(infos[0].lastMessageContent)")
+        
         // reload:
         self.tableView.reloadData()
         self.refreshControl?.endRefreshing()
@@ -95,19 +95,26 @@ class ChatsViewController: UITableViewController {
         
         let chatInfo = self.chatThreads[indexPath.row]
 
+        if (indexPath.row == 0) {
+            print("isSeen: \(chatInfo.isSeen)")
+        }
+        
         if  chatInfo.isSeen {
         
             if let titleLabel = cell.viewWithTag(100) as? UILabel {
                 titleLabel.text = chatInfo.meetTitle
+                titleLabel.textColor = UIColor.lightGrayColor()
+                titleLabel.font = UIFont.boldSystemFontOfSize(titleLabel.font.pointSize)
             }
             
             if let timeLabel = cell.viewWithTag(101) as? UILabel {
                 timeLabel.text = Util.getChatTimestamp(chatInfo.lastMessageTime)
+                timeLabel.textColor = UIColor.lightGrayColor()
             }
         
             if let lastCommentLabel = cell.viewWithTag(103) as? UILabel {
                 lastCommentLabel.text = chatInfo.authorName + ": " + chatInfo.lastMessageContent
-                lastCommentLabel.textColor = UIColor.blackColor()
+                lastCommentLabel.textColor = UIColor.lightGrayColor()
             }
             
             return cell
@@ -123,7 +130,7 @@ class ChatsViewController: UITableViewController {
             
             if let timeLabel = cell.viewWithTag(101) as? UILabel {
                 timeLabel.text = Util.getChatTimestamp(chatInfo.lastMessageTime)
-                timeLabel.textColor = UIColor.orangeColor()
+                timeLabel.textColor = Util.getMainColor()
             }
             
             
