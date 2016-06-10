@@ -25,11 +25,14 @@ class MapCell: UITableViewCell {
     // sets the user current location and the meet location in the map view:
     // called from parent tableView.
     func setMap(userLocation: CLLocationCoordinate2D?,
-                meetLocation: CLLocationCoordinate2D,
+                meetLocation: CLLocationCoordinate2D?,
                 meetLocationName: String?,
                 meetLocationAddress: String?) {
+        
         self.userLocation = userLocation
         self.meetLocation = meetLocation
+        
+        print("SET MAP: \(self.meetLocation) --> \(meetLocationAddress)")
         
         mapView.myLocationEnabled = true
         
@@ -39,20 +42,26 @@ class MapCell: UITableViewCell {
         
         // now annotate map with the meetLocation:
         let marker = GMSMarker()
-        marker.position = meetLocation
+        marker.position = meetLocation!
         
         // setting the location name and address:
-        if ((meetLocationName) != nil) {
-            marker.title = meetLocationName
+
+        
+        if (meetLocationName != nil) {
+            marker.title = meetLocationName!
         }
+        
         if (meetLocationAddress != nil) {
-            marker.snippet = meetLocationAddress
+            marker.snippet = meetLocationAddress!
         }
         
         marker.appearAnimation = kGMSMarkerAnimationPop
         marker.map = mapView
         
+        self.loadingSpinner.hidden = true
+        
         mapView.selectedMarker = marker
+
     }
     
     func setup() {

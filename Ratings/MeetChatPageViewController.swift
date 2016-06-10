@@ -15,7 +15,6 @@ class MeetChatPageViewController: UIPageViewController {
     //let meetId = "56e1b6f5fa3f0c01f45568cd"
     
     @IBOutlet weak var joinButton: SwiftyButton!
-    let dummyUserId = "56dbb2013cd9a60ed58b1ae3" // currently DUMMY_USER2!
     
     @IBOutlet weak var joinSpinner: UIActivityIndicatorView!
     var meetId: String?
@@ -41,16 +40,6 @@ class MeetChatPageViewController: UIPageViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // making it so that the first row isn't behind the navbar:
-        self.edgesForExtendedLayout = UIRectEdge.None
-        
-        dataSource = self
-        delegate = self
-        
-        switchSegment.tintColor = UIColor.whiteColor()
-        
-        // styling the joinButton:
         joinButton.buttonColor = Util.getMainColor()
         joinButton.shadowHeight = 0
         joinButton.cornerRadius = 5
@@ -58,10 +47,31 @@ class MeetChatPageViewController: UIPageViewController {
         joinButton.setTitle("join", forState: UIControlState.Normal)
         joinButton.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
         
-        fetchAndSetUserMeetInfo()
+        switchSegment.tintColor = UIColor.whiteColor()
         
+        reload()
+    }
+    
+    func reload() {
+        // making it so that the first row isn't behind the navbar:
+        self.edgesForExtendedLayout = UIRectEdge.None
         
+        dataSource = self
+        delegate = self
+        
+        if (self.joinButton != nil) {
+            self.joinButton.hidden = true
+        }
+        
+        self.switchSegment.hidden = true
         self.titleButton.hidden = true
+        
+        // remove chatView if it exists:
+        if (self.chatController != nil) {
+            self.removeChatView()
+        }
+        
+        fetchAndSetUserMeetInfo()
     }
     
     
@@ -71,12 +81,31 @@ class MeetChatPageViewController: UIPageViewController {
         self.orderedViewControllers.append(self.chatController!)
     }
     
+    func removeChatView() {
+        self.orderedViewControllers.removeLast()
+        self.chatController = nil
+    }
+    
+    func _onMeetExitOrCancel() {
+        self.reload()
+        self._reloadMeetController()
+    }
+    
+    func _reloadMeetController() {
+        // now reload the meetController if it exists:
+        let meetController = self.meetController! as! MeetController
+        meetController.handleRefresh(meetController.refreshControl!)
+        print("reloaded meetController!")
+    }
+    
+    
     @IBAction func transitionMeetSettings(sender: UIButton) {
         if (self.isMember) {
             // present modally:
             let modalViewController = self.storyboard?.instantiateViewControllerWithIdentifier("MeetSettingsModal") as! MeetSettingsModalViewController
             modalViewController.isHost = self.isHost
             modalViewController.meetId = self.meetId!
+            modalViewController.parentRefresh = self._onMeetExitOrCancel
             modalViewController.isMeetCancelled = self.isMeetCancelled
             modalViewController.modalPresentationStyle = .OverCurrentContext
             presentViewController(modalViewController, animated: true, completion: nil)
@@ -95,8 +124,9 @@ class MeetChatPageViewController: UIPageViewController {
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.whiteColor()
         
         self.titleButton.hidden = false
-        self.titleButton.enabled = true
+        self.switchSegment.hidden = false
         
+        self.titleButton.enabled = true
         self.titleButton.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
     }
     
@@ -107,6 +137,11 @@ class MeetChatPageViewController: UIPageViewController {
 
         self.titleButton.hidden = false
         self.titleButton.enabled = false
+        
+        if (self.joinButton != nil) {
+            self.joinButton.hidden = false
+        }
+        
         self.titleButton.setTitleColor(UIColor.darkGrayColor(), forState: UIControlState.Normal)
         
         if (self.isMeetCancelled!) {
@@ -222,8 +257,7 @@ class MeetChatPageViewController: UIPageViewController {
         Alamofire.request(.POST, url, parameters:
             [
                 "accessToken": accessToken,
-                "meetId": self.meetId!,
-                "userId": self.dummyUserId
+                "meetId": self.meetId!
             ])
             .responseJSON { response in
             
@@ -245,19 +279,10 @@ class MeetChatPageViewController: UIPageViewController {
                     meetController.meet = JSON["meet"]
                     print(JSON["meet"])
                     
-                    // TODO: setting the following bools w/ values returned from the Server would be much safer. Current code
-                    // is making an assumption.
-                    print("received meet: \(meetController.meet!["_id"]! as! String!)")
-                    
-                    // setting the color of navbar to reflect that user is now a part of
-                    // the meet:
-                    self.navigationController!.navigationBar.barTintColor = UIColor.greenColor()
-                    
-                    self.addChatView()
-                    
-                    // replace the current loading spinner w/ SwitchSegment to toggle
-                    // between Meet Information and ChatView:
-                    self.setSwitchSegment(0)
+                    // simply refresh this view!
+                    //self.viewDidLoad()
+                    self.reload()
+                    self._reloadMeetController()
                 }
             }
             
@@ -267,7 +292,6 @@ class MeetChatPageViewController: UIPageViewController {
     
     private(set) lazy var orderedViewControllers: [UIViewController] = {
         self.meetController = self.newMeetController(self.meetId)
-        
         return [
             self.meetController!
         ]
@@ -279,6 +303,7 @@ class MeetChatPageViewController: UIPageViewController {
         
         print("about to initialize the meetController from MeetChatPageViewController: \(self.meetId)")
         meetController.meetId = meetId;
+        meetController.isHost = isHost
         return meetController
     }
     

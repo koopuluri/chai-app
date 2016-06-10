@@ -20,6 +20,8 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
     
     var meetLocation: CLLocationCoordinate2D?
     
+    var isHost: Bool?
+    
     // if loading, then spinner is displayed for the attendeeCell:
     var isAttendeesLoading = true
     
@@ -79,7 +81,6 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         
         print("MeetController.viewDidLoad().meetId: \(self.meetId)")
         startRefresh()
-        fetchAttendees()
     }
     
     // If self.meet is set when this is called, it will update the UI to
@@ -90,8 +91,10 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         tableView.reloadSections(NSIndexSet(index: 2), withRowAnimation: .None)
     }
     
-    func refresh() {
-        print("MeetController.refresh()")
+    func onUserRemoval(success: Bool) {
+        
+        // refresh this view to get updated attendee count.
+        self.handleRefresh(self.refreshControl!)
     }
     
     func handleRefresh(refreshControl: UIRefreshControl) {
@@ -114,6 +117,9 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                     self.stopRefresh()
                 }
             }
+            
+            // also fetching the attendees:
+            fetchAttendees()
         } else {
             print("meetId is null!")
         }
@@ -134,7 +140,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         self.isAttendeesLoading = true
         API.getMeetAttendees(self.meetId!, callback: self._onAttendeesReceived)
     }
-
+    
     func startRefresh() {
         self.tableView.setContentOffset(CGPointMake(0, self.tableView.contentOffset.y-(self.refreshControl?.frame.size.height)!), animated: true);
         self.refreshControl?.beginRefreshing()
@@ -149,7 +155,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
+    
     override func tableView(tableView: UITableView,
                             numberOfRowsInSection section: Int) -> Int {
         if (section == 3) {
@@ -188,7 +194,6 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                 attendeeCell.loadingSpinner.hidden = true
                 attendeeCell.loadingSpinner.stopAnimating()
                 
-                
                 let totalCount = index*3 + 3
                 var count = 3
                 if (totalCount > self.attendees.count) {
@@ -200,7 +205,10 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                 attendeeCell.meetId = self.meetId
                 attendeeCell.setDataSource()
             }
+            
             attendeeCell.parentController = self
+            attendeeCell.isHost = self.isHost
+            attendeeCell.onUserRemoval = self.onUserRemoval
             attendeeCell.backgroundColor = UIColor.blackColor()
             return attendeeCell
 
@@ -218,7 +226,6 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
             }
             
             if let countLabel = cell.viewWithTag(10) as? UILabel {
-                
                 let count = self.meet!["count"] as! Int!
                 let maxCount = self.meet!["maxCount"] as! Int!
                 countLabel.text = String(count) + "/" + String(maxCount)
@@ -248,8 +255,7 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
             let comps = Util.getComps(meetDate)
             
             cell.dayLabel.text = Util.getDay(meetDate)
-            cell.timeLabel.text = Util.getUpcomingMeetTimestamp(meetDate)
-            cell.durationLabel.text = Util.getDurationText(duration)
+            cell.timeDurationLabel.text = Util.getMeetTimestamp(meetDate) + " for: " + Util.getDurationText(duration)
             cell.descriptionLabel.text = description
             
             // setting the height:
@@ -289,11 +295,16 @@ class MeetController: UITableViewController, CLLocationManagerDelegate {
                 
                 mapCell.setMap(
                     self.currentLocation,
-                    meetLocation: self.meetLocation!,
+                    meetLocation: self.meetLocation,
                     meetLocationName: locationName,
                     meetLocationAddress: locationAddress
                 )
                 
+                print("meeLocation: \(meetLocation)")
+                print("meetLocation.coords: \(meetLocation?.latitude) ... \(meetLocation?.longitude)")
+                
+                print("currLoc: \(currentLocation)")
+                print("currLoc.coords: \(currentLocation?.latitude) ... \(currentLocation?.longitude)")
             }
 
             return mapCell

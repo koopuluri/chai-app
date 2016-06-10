@@ -40,6 +40,10 @@ class ChatsViewController: UITableViewController {
         self.refreshControl?.sendActionsForControlEvents(UIControlEvents.ValueChanged)
     }
     
+    override func viewDidAppear(animated: Bool) {
+        startRefresh()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -48,7 +52,6 @@ class ChatsViewController: UITableViewController {
         self.navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
         
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
-        startRefresh()
     }
     
     // MARK: - Navigation
@@ -68,9 +71,6 @@ class ChatsViewController: UITableViewController {
     
     func _setChatInfo(infos: [ChatInfo]) {
         self.chatThreads = infos
-        
-        print("_setChatInfo last(): \(self.chatThreads[0].isSeen) --> \(self.chatThreads[0].lastMessageContent)")
-        print("_setChatInfo infos.lasrt(): \(infos[0].isSeen) --> \(infos[0].lastMessageContent)")
         
         // reload:
         self.tableView.reloadData()
@@ -132,7 +132,6 @@ class ChatsViewController: UITableViewController {
                 timeLabel.text = Util.getChatTimestamp(chatInfo.lastMessageTime)
                 timeLabel.textColor = Util.getMainColor()
             }
-            
             
             if let lastCommentLabel = cell.viewWithTag(103) as? UILabel {
                 lastCommentLabel.text = chatInfo.authorName + ": " + chatInfo.lastMessageContent

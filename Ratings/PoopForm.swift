@@ -19,9 +19,8 @@ class Validation: NSObject {
     var meetTime = false
 }
 
-class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, CLLocationManagerDelegate {
+class PoopForm: UITableViewController, CLLocationManagerDelegate, UITextFieldDelegate {
 
-    @IBOutlet weak var descriptionTextView: UITextView!
     @IBOutlet weak var titleTextField: UITextField!
     
     @IBOutlet weak var submitSpinner: UIActivityIndicatorView!
@@ -31,10 +30,13 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     @IBOutlet weak var daySegment: UISegmentedControl!
     @IBOutlet weak var locationLabel: UILabel!
     @IBOutlet weak var maxAttendeesSegment: UISegmentedControl!
-    @IBOutlet weak var durationSegment: UISegmentedControl!
     
+    @IBOutlet weak var descriptionTextField: UITextField!
+    @IBOutlet weak var durationSegment: UISegmentedControl!
     @IBOutlet weak var locationSpinner: UIActivityIndicatorView!
 
+    let LOCATION_ROW = 3
+    
     // validation variables:
     var locInfo: Util.LocationInfo?
     var meetTimestamp = NSDate()
@@ -54,7 +56,7 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         self.isDisabled = !val  // for the location segue to not be triggered.
         self.daySegment.userInteractionEnabled = val
         self.titleTextField.userInteractionEnabled = val
-        self.descriptionTextView.userInteractionEnabled = val
+        self.descriptionTextField.userInteractionEnabled = val
         self.maxAttendeesSegment.userInteractionEnabled = val
         self.durationSegment.userInteractionEnabled = val
         self.startTimeDatePicker.userInteractionEnabled = val
@@ -127,7 +129,7 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         // combining information and sending to server:
         // make the call:
         print("title: \(titleTextField.text!)")
-        print("description: \(descriptionTextView.text)")
+        print("description: \(descriptionTextField.text)")
         print("maxAttendees: \(maxAttendees)")
         print("duration: \(duration)")
         print("loc.coords: \(locInfo?.coords)")
@@ -153,7 +155,7 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
             self.presentViewController(alert, animated: true, completion: nil)
         }
         
-        API.createMeet(self.titleTextField.text!, desc: self.descriptionTextView.text, maxAttendees: maxAttendees!, duration: duration, time: self.meetTimestamp, loc: self.locInfo!.coords!, locName: (self.locInfo?.name)!, locAddress: (self.locInfo?.address)!, success: success, fail: fail)
+        API.createMeet(self.titleTextField.text!, desc: self.descriptionTextField.text!, maxAttendees: maxAttendees!, duration: duration, time: self.meetTimestamp, loc: self.locInfo!.coords!, locName: (self.locInfo?.name)!, locAddress: (self.locInfo?.address)!, success: success, fail: fail)
 
     }
     
@@ -223,43 +225,12 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     // when location row selected, launch the Google Place Picker:
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         print("You selected cell number: \(indexPath.row)!")
-        if (indexPath.row == 2 && !self.isDisabled) {
+        if (indexPath.row == self.LOCATION_ROW && !self.isDisabled) {
             print("selected the location row!")
             self.performSegueWithIdentifier("SelectLocationSegue", sender: self)
         }
     }
     
-    
-    // for the Title text field:
-    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
-        guard let text = textField.text else { return true }
-        
-        let newLength = text.utf16.count + string.utf16.count - range.length
-        
-        if newLength == 0 {
-            // show error:
-            titleTextField.layer.borderColor = UIColor.redColor().CGColor
-            
-            validation.titleText = false
-            self.submitButton.enabled = false
-            return true
-        } else {
-            validation.titleText = true
-            validateButton()
-        }
-        
-        titleTextField.layer.borderColor = UIColor.lightGrayColor().CGColor
-        return newLength <= Util.MAX_TITLE_SIZE // Bool
-    }
-    
-    // for the description text view:
-    func textView(textView: UITextView, shouldChangeTextInRange range: NSRange, replacementText text: String) -> Bool {
-        guard let string = textView.text else {return true}
-        //If the text is larger than the maxtext, the return is false
-        
-        // Swift 2.0
-        return textView.text.characters.count + (text.characters.count - range.length) <= Util.MAX_DESCRIPTION_SIZE
-    }
     
     override func viewDidLoad() {
         
@@ -297,13 +268,16 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
         titleTextField.layer.cornerRadius = 5.0
         titleTextField.layer.borderColor = UIColor.lightGrayColor().CGColor
         titleTextField.attributedPlaceholder = NSAttributedString(string: "Meet Title", attributes: [NSForegroundColorAttributeName : UIColor.lightGrayColor()])
+        titleTextField.returnKeyType = UIReturnKeyType.Done
         
         // description text view:
-        descriptionTextView.layer.borderWidth = 1.0
-        descriptionTextView.layer.borderColor = UIColor.lightGrayColor().CGColor
-        descriptionTextView.layer.cornerRadius = 5.0
-        descriptionTextView.backgroundColor = UIColor.whiteColor()
-        descriptionTextView.delegate = self
+        descriptionTextField.delegate = self
+        descriptionTextField.layer.borderWidth = 1.0
+        descriptionTextField.layer.cornerRadius = 5.0
+        descriptionTextField.layer.borderColor = UIColor.lightGrayColor().CGColor
+        descriptionTextField.attributedPlaceholder = NSAttributedString(string: "Meet Description", attributes: [NSForegroundColorAttributeName : UIColor.lightGrayColor()])
+        descriptionTextField.font = UIFont(name: "System", size: CGFloat(12.0))
+        descriptionTextField.returnKeyType = UIReturnKeyType.Done
         
         // attendees segment:
         maxAttendeesSegment.setTitle("2", forSegmentAtIndex: 0)
@@ -387,8 +361,40 @@ class PoopForm: UITableViewController, UITextFieldDelegate, UITextViewDelegate, 
     func datePickerChanged(datePicker:UIDatePicker) {
         validateFormTimestamp()
     }
+    
+    // Text Field delegate funcs:
+    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+        guard let text = textField.text else { return true }
+        
+        let newLength = text.utf16.count + string.utf16.count - range.length
+        
+        if (textField.tag == 1) {
+            if newLength == 0 {
+                // show error:
+                textField.layer.borderColor = UIColor.redColor().CGColor
+                
+                self.validation.titleText = false
+                self.validateButton()
+                return true
+            } else {
+                self.validation.titleText = true
+                self.validateButton()
+            }
+            
+            textField.layer.borderColor = UIColor.lightGrayColor().CGColor
+            return newLength <= Util.MAX_TITLE_SIZE // Bool
+        } else {
+            // desc text field:
+            let newLength = text.utf16.count + string.utf16.count - range.length
+            return newLength <= Util.MAX_DESCRIPTION_SIZE
+        }
+    }
+    
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return false
+    }
 }
-
 
 
 

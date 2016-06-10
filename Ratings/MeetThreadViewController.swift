@@ -38,10 +38,21 @@ class MeetThreadViewController: JSQMessagesViewController{
         self.setup()
         self.fetchMessages()
         
+        // check if user is member:
+        API.amIAttendee(self.meetId!, callback: ifNotMember)
+    }
+    
+    func ifNotMember(amMember: Bool) {
+        // exit back to the MAinController if not member:
+        if (!amMember) {
+            self.parentViewController?.navigationController?.dismissViewControllerAnimated(true, completion: nil)
+        }
+    }
+        
+    override func viewDidDisappear(animated: Bool) {
         // tell server that chat opened:
         API.openedChat(self.meetId!)
     }
-    
     
     // handles socket.io message received for chat: renders if new message is not authored by current user.
     func handleSocketMessage(message: AnyObject) {
@@ -49,14 +60,17 @@ class MeetThreadViewController: JSQMessagesViewController{
         if (!isBot) {
             let userId = message["author"]!!["_id"]! as! String!
             if (userId == self.senderId) {
+                print("userId == senderId: \(userId) vs. \(self.senderId)")
                 // don't add.
             } else {
                 // add to the messages:
                 self.messages.append(getJSQMessageForChatMessage(message))
+                self.reloadChatView()
             }
         } else {
             // if bot message, append.
             self.messages.append(getJSQMessageForChatMessage(message))
+            self.reloadChatView()
         }
     }
     
@@ -110,6 +124,11 @@ class MeetThreadViewController: JSQMessagesViewController{
         self.collectionView?.reloadData()
     }
     
+    func reloadChatView() {
+        self.reloadMessagesView()
+        self.scrollToBottomAnimated(true)
+    }
+    
     func fetchMessages() {
         let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
         let url = "https://one-mile.herokuapp.com/meet_chat_messages?meetId=\(self.meetId!)&start=\(self.start)&count=\(self.count)&accessToken=\(accessToken)"
@@ -137,8 +156,7 @@ class MeetThreadViewController: JSQMessagesViewController{
                     self.messages.append(self.getJSQMessageForChatMessage(message))
                 }
                 
-                // reload the messages:
-                self.reloadMessagesView()
+                self.reloadChatView()
                 
                 // set up socket once all of the message are fetched and set:
                 self.setUpSocket()

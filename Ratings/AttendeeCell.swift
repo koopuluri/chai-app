@@ -14,6 +14,9 @@ class AttendeeCell: UITableViewCell  {
     
     var attendeesForRow: ArraySlice<Peep>?
     var meetId: String?
+    var isHost: Bool?
+    
+    var onUserRemoval: ((Bool) -> Void)?
     
     @IBOutlet weak var loadingSpinner: UIActivityIndicatorView!
     var parentController: MeetController?
@@ -72,10 +75,9 @@ extension AttendeeCell: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func onRemovalComplete(index: Int) -> (() -> Void) {
         func remove() {
-            self.attendeesForRow?.removeAtIndex(index)
             
             // make call to server to remove:
-            API.removeUserFromMeet(self.meetId!, attendeeId: self.attendeesForRow![index]._id!, callback: nil)
+            API.removeUserFromMeet(self.meetId!, attendeeId: self.attendeesForRow![index]._id!, callback: self.onUserRemoval!)
         }
         
         return remove
@@ -86,6 +88,7 @@ extension AttendeeCell: UICollectionViewDelegate, UICollectionViewDataSource {
         let userId = attendeesForRow![indexPath.row]._id
         let userModalVC = (self.parentController!.storyboard?.instantiateViewControllerWithIdentifier("UserModal") as! UserModalViewController)
         userModalVC.userId = userId
+        userModalVC.isHost = self.isHost
         userModalVC.onRemoval = self.onRemovalComplete(indexPath.row)
         userModalVC.modalPresentationStyle = .OverCurrentContext
         self.parentController!.presentViewController(userModalVC, animated: true, completion: nil)

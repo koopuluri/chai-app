@@ -20,6 +20,8 @@ class MeetSettingsModalViewController: UIViewController, UIGestureRecognizerDele
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var exitSpinner: UIActivityIndicatorView!
     
+    var parentRefresh: (() -> Void)!
+    
     func gestureRecognizer(_: UIGestureRecognizer,
                            shouldRecognizeSimultaneouslyWithGestureRecognizer:UIGestureRecognizer) -> Bool {
         print("gestureRecognized")
@@ -81,6 +83,7 @@ class MeetSettingsModalViewController: UIViewController, UIGestureRecognizerDele
     func onExitOrCancel(success: Bool) {
         // transition to the MainController (dismiss the parent's parent's navigation controller:
         self.dismissViewControllerAnimated(true, completion: onDismissal)
+        self.parentRefresh()
     }
 
     @IBAction func exitOrCancel(sender: SwiftyButton) {

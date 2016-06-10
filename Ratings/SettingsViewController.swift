@@ -16,6 +16,7 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
     var desc: String?
     var pictureUrl: String?
     
+    @IBOutlet weak var loadingSpinner: UIActivityIndicatorView!
     @IBOutlet weak var editDoneButton: UIButton!
     @IBOutlet weak var userDescTextView: UITextView!
     @IBOutlet weak var userDescLabel: UILabel!
@@ -35,7 +36,7 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
         let signupController = storyboard?.instantiateViewControllerWithIdentifier("SignupController")
         self.presentViewController(signupController!, animated: true, completion: nil)
         //self.parentViewController?.navigationController?.dismissViewControllerAnimated(false, completion: nil)
-        self.dismissViewControllerAnimated(false, completion: nil)
+        //self.dismissViewControllerAnimated(false, completion: nil)
     }
     
     override func viewDidLoad() {
@@ -44,6 +45,7 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
         // styling the navigation bar:
         self.navigationItem.rightBarButtonItem?.tintColor = Util.getMainColor()
         self.navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
+        tableView.tableFooterView = UIView()
         
         // setup:
         self.editDoneButton.hidden = true
@@ -53,6 +55,10 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
         // setting the border:
         self.userDescTextView.layer.borderWidth = 1.0
         self.userDescTextView.layer.cornerRadius = 5.0
+        
+        // loading:
+        self.loadingSpinner.tintColor = Util.getMainColor()
+        self.loadingSpinner.hidesWhenStopped = true
         
         fetchUserInfo()
     }
@@ -91,10 +97,27 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
         }
     }
     
+    func hideEverything() {
+        self.userDescLabel.hidden = true
+        self.avatarImage.hidden = true
+        self.userDescTextView.hidden = true
+        self.editDoneButton.hidden = true
+        self.userName.hidden = true
+    }
+    
+    func showEverything() {
+        self.userDescLabel.hidden = false
+        self.avatarImage.hidden = false
+        self.userDescTextView.hidden = false
+        self.editDoneButton.hidden = false
+        self.userName.hidden = false
+    }
+    
     
     // displays user avatar, name and description:
     func fetchUserInfo() {
-        print("fetchUserInfo()")
+        loadingSpinner.startAnimating()
+        hideEverything()
         func onUserReceived(user: Peep) {
             self.name = user.name
             self.desc = user.description
@@ -105,7 +128,8 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
             
             // set the image
             Util.setAvatarImage(self.pictureUrl!, avatarImage: self.avatarImage)
-            
+            loadingSpinner.stopAnimating()
+            showEverything()
             self.editDoneButton.hidden = false
         }
         

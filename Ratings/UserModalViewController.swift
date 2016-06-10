@@ -14,6 +14,7 @@ class UserModalViewController: UIViewController, UIGestureRecognizerDelegate {
     
     var userId: String?
     var meetId: String?
+    var isHost: Bool?
     var canRemoveFromMeet = true
     
     var onRemoval: (() -> Void)?
@@ -54,7 +55,7 @@ class UserModalViewController: UIViewController, UIGestureRecognizerDelegate {
         self.view.backgroundColor = UIColor.clearColor()
         self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
         
-        canRemoveFromMeet = Util.CURRENT_USER_ID != self.userId!
+        canRemoveFromMeet = (Util.CURRENT_USER_ID != self.userId!) && isHost!
         if (!canRemoveFromMeet) {
             
             // don't give option to remove user:
@@ -94,13 +95,13 @@ class UserModalViewController: UIViewController, UIGestureRecognizerDelegate {
             self.loadingSpinner.hidden = true
         }
         
-        API.getUserInfo(onUserReceived)
+        API.getAttendeeInfo(self.userId!, callback: onUserReceived)
     }
     
     
     @IBAction func removeUserFromMeet(sender: UIButton) {
-        print("Remove user from meet!")
         self.onRemoval!()
+        self.dismiss()
     }
     
     override func didReceiveMemoryWarning() {

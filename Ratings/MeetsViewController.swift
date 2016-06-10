@@ -103,7 +103,7 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         }
         
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
-        startRefresh()
+        
     }
     
     
@@ -111,9 +111,8 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        self.tabBarController?.tabBar.hidden = false
+        startRefresh()
     }
-    
     
     
     // if user's current location set, goes and fetches meets in the area:
@@ -132,7 +131,6 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
             // Pulling meets from the server:
             API.getMeetsAtLocation(self.currentLocation!, start: self.start, count: self.count, callback: onMeetsReceived)
         }
-
     }
     
     
@@ -288,26 +286,10 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
         if let durationLabel = cell.viewWithTag(105) as? UILabel {
             let duration = meet.duration!
             print("obtained duration: \(duration)")
-            durationLabel.text = Util.getDurationText(duration)
+            durationLabel.text = "for " + Util.getDurationText(duration)
             durationLabel.textColor = Util.getMainColor()
         }
-        
-        // now for the views that hold time and duration:
-        if let timeView = cell.viewWithTag(1) as? UIView! {
-            timeView.layer.borderWidth = 0.4
-            timeView.layer.borderColor = UIColor.lightGrayColor().CGColor
-            timeView.layer.cornerRadius = 5.0
-            timeView.backgroundColor = UIColor.whiteColor()
-        }
-        
-        if let durationView = cell.viewWithTag(2) as? UIView! {
-            durationView.layer.borderWidth = 0.4
-            durationView.layer.borderColor = UIColor.lightGrayColor().CGColor
-            durationView.layer.cornerRadius = 5.0
-            durationView.backgroundColor = UIColor.whiteColor()
-        }
-        
-        
+          
         if let avatarImage = cell.viewWithTag(104) as? UIImageView {
             let picUrl = meet.createdBy?.pictureUrl!
             Util.setAvatarImage(picUrl!, avatarImage: avatarImage)

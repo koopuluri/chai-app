@@ -18,6 +18,19 @@ class Util {
     static let MAX_DESCRIPTION_SIZE = 80
     
     static var CURRENT_USER_ID = "57129ebcedd2393b22395684"
+    static var DEVICE_TOKEN: String?
+    
+    
+    static func getDeviceTokenString(token: NSData) -> String {
+        let tokenChars = UnsafePointer<CChar>(token.bytes)
+        var tokenString = ""
+        
+        for i in 0..<token.length {
+            tokenString += String(format: "%02.2hhx", arguments: [tokenChars[i]])
+        }
+        
+        return tokenString
+    }
     
     
     // getting the day for display in format: mm/33/yyyy if date before today, else, "today" / "tomorrow" for future dates.
@@ -32,6 +45,15 @@ class Util {
         
         // date is definitely in the past:
         return Util.getChatTimestamp(date)
+    }
+    
+    
+    static func getMeetTimestamp(meetTime: NSDate) -> String {
+        if NSDate().compare(meetTime) == NSComparisonResult.OrderedAscending {
+            return Util.getUpcomingMeetTimestamp(meetTime)
+        } else {
+            return Util.getChatTimestamp(meetTime)
+        }
     }
     
     

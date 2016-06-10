@@ -14,15 +14,39 @@ import GoogleMaps
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    
+    func goToSignup() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        // Then push that view controller onto the navigation stack
+        let rootViewController = self.window!.rootViewController as! UINavigationController
+        let signupController = storyboard.instantiateViewControllerWithIdentifier("SignupController")
+        rootViewController.presentViewController(signupController, animated: true, completion: nil)
+    }
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
         // Google maps:
         GMSServices.provideAPIKey("AIzaSyDvzo4jnTfjRCQLI0Wgp5NzGW4wJzQ6DCI")
         
+        API.APP = self
+        
+        // notifs:
+        let settings = UIUserNotificationSettings(forTypes: [.Alert, .Badge, .Sound], categories: nil)
+        application.registerUserNotificationSettings(settings)
+        application.registerForRemoteNotifications()
+
+        
         // Override point for customization after application launch.
         return FBSDKApplicationDelegate.sharedInstance().application(application, didFinishLaunchingWithOptions: launchOptions)
     
+    }
+    
+    func application(application: UIApplication,didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData){
+        //send this device token to server
+        Util.DEVICE_TOKEN = Util.getDeviceTokenString(deviceToken)
+        
+        print("SET DEVICE TOKEN!! \(Util.DEVICE_TOKEN)")
     }
     
     func application(application: UIApplication,

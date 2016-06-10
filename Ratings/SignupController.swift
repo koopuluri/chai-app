@@ -78,10 +78,15 @@ class SignupController: UIViewController, FBSDKLoginButtonDelegate {
                 let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
                 
                 // make request to server with the accessToken:
+                
                 let url = "https://one-mile.herokuapp.com/login-signup"
+                
+                let deviceToken = (Util.DEVICE_TOKEN == nil) ? "" : Util.DEVICE_TOKEN!
+                
                 Alamofire.request(.POST, url,
                     parameters: [
-                        "accessToken": accessToken
+                        "accessToken": accessToken,
+                        "deviceToken": deviceToken
                     ]
                 ) .responseJSON { response in
                     if let JSON = response.result.value {

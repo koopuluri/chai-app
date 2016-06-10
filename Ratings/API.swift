@@ -13,31 +13,63 @@ import FBSDKLoginKit
 
 class API {
     
-    static var accessToken = FBSDKAccessToken.currentAccessToken().tokenString
+    static var APP: AppDelegate?
     
     static var BASE_URL = "https://one-mile.herokuapp.com/"
     
-    static func removeUserFromMeet(meetId: String, attendeeId: String, callback: ((Bool) -> Void)? ) {
+    static func accessToken() -> String {
+        return FBSDKAccessToken.currentAccessToken().tokenString
+    }
+    
+    static func checkAuthError(json: AnyObject) -> Bool {
+        if (json["authError"]! != nil) {
+
+                print("AAHA, auth error --> lgoging out")
+                // logout of facebook.
+                FBSDKLoginManager().logOut()
+            
+                // take user back to the signup form:
+                API.APP!.goToSignup()
+                return true
+        } else {
+            return false
+        }
+    }
+    
+    static func amIAttendee(meetId: String, callback: (Bool) -> Void) {
+        let url = BASE_URL + "am_i_attendee?meetId=\(meetId)&accessToken=\(accessToken())"
+        print("AMI ATTENDEE: \(url)")
+        Alamofire.request(.GET, url) .responseJSON { response in
+            if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
+                if (JSON["error"]! != nil) {
+                    print("error in amiattendee: \(JSON["error"]! as! String!)")
+                } else {
+                    let isAttendee = JSON["result"]! as! Bool!
+                    callback(isAttendee)
+                }
+            }
+        }
+    }
+    
+    static func removeUserFromMeet(meetId: String, attendeeId: String, callback: ((Bool) -> Void)) {
         let url = BASE_URL + "remove_attendee"
         Alamofire.request(.POST, url,
             parameters: [
                 "meetId": meetId,
                 "attendeeId": attendeeId,
-                "accessToken": accessToken
+                "accessToken": accessToken()
             ])
             .responseJSON { response in
-                var toCall = false
                 if let JSON = response.result.value {
-                    if (JSON["error"] != nil) {
+                    if (API.checkAuthError(JSON)) {return}
+                    if (JSON["error"]! != nil) {
                         print("could not removeUserFromMeet \(JSON["error"]! as! String!)")
+                        callback(false)
                     } else {
                         print("removedUser!")
-                        toCall = true
+                        callback(true)
                     }
-                }
-                
-                if (callback != nil) {
-                    callback!(toCall)
                 }
         }
     }
@@ -47,11 +79,12 @@ class API {
         Alamofire.request(.POST, url,
             parameters: [
                 "meetId": meetId,
-                "accessToken": accessToken
+                "accessToken": accessToken()
             ])
             .responseJSON { response in
                 if let JSON = response.result.value {
-                    if (JSON["error"] != nil) {
+                    if (API.checkAuthError(JSON)) {return}
+                    if (JSON["error"]! != nil) {
                         print("could not exitMeet: \(JSON["error"]! as! String!)")
                         callback(false)
                     } else {
@@ -67,10 +100,11 @@ class API {
         Alamofire.request(.POST, url,
             parameters: [
                 "meetId": meetId,
-                "accessToken": accessToken
+                "accessToken": accessToken()
             ])
             .responseJSON { response in
                 if let JSON = response.result.value {
+                    if (API.checkAuthError(JSON)) {return}
                     if (JSON["error"] != nil) {
                         print("could not cancel meet \(JSON["error"]! as! String!)")
                         callback(false)
@@ -87,10 +121,11 @@ class API {
         Alamofire.request(.POST, url,
             parameters: [
                "meetId": meetId,
-               "accessToken": accessToken
+               "accessToken": accessToken()
         ])
         .responseJSON { response in
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 
                 if (JSON["error"] != nil) {
                     let error = JSON["error"]! as! String!
@@ -106,9 +141,10 @@ class API {
     }
     
     static func getMeetAttendees(meetId: String, callback: ([Peep]) -> Void) {
-        let url = BASE_URL + "meet_attendees?meetId=\(meetId)&accessToken=\(accessToken)"
+        let url = BASE_URL + "meet_attendees?meetId=\(meetId)&accessToken=\(accessToken())"
         Alamofire.request(.GET, url) .responseJSON { response in
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 // TODO: handle the error case:
                 if (JSON["error"] != nil) {
                     
@@ -135,7 +171,7 @@ class API {
     }
     
     static func getMeetsAtLocation(loc: CLLocationCoordinate2D, start: Int, count: Int, callback: (todayMeets: [Meet], tomorrowMeets: [Meet]) -> Void) {
-        let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(loc.longitude)&lat=\(loc.latitude)&start=\(start)&count=\(count)&accessToken=\(accessToken)"
+        let url = "https://one-mile.herokuapp.com/meets_by_location?long=\(loc.longitude)&lat=\(loc.latitude)&start=\(start)&count=\(count)&accessToken=\(accessToken())"
         
         var todayMeets: [Meet] = []
         var tomorrowMeets: [Meet] = []
@@ -144,6 +180,7 @@ class API {
         Alamofire.request(.GET, url) .responseJSON { response in
             
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 
                 if (JSON["error"] != nil) {
                     // handle...
@@ -196,11 +233,12 @@ class API {
     }
     
     static func getUpcomingMeets(callback: ([UpcomingMeet]) -> Void) {
-        let url = "https://one-mile.herokuapp.com/user_upcoming_meets?accessToken=\(accessToken)"
+        let url = "https://one-mile.herokuapp.com/user_upcoming_meets?accessToken=\(accessToken())"
         print("API.getUpcomingMeets: \(url)")
         
         Alamofire.request(.GET, url) .responseJSON { response in
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 if (JSON["error"] != nil) {
                     // handle...
                 }
@@ -229,11 +267,12 @@ class API {
     }
     
     static func getUserChats(start: Int, count: Int, callback: ([ChatInfo]) -> Void) {
-        let url = "https://one-mile.herokuapp.com/user_chats?start=\(start)&count=\(count)&accessToken=\(accessToken)"
+        let url = "https://one-mile.herokuapp.com/user_chats?start=\(start)&count=\(count)&accessToken=\(accessToken())"
         print("getUserChats: \(url)")
         Alamofire.request(.GET, url) .responseJSON { response in
             
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 
                 if (JSON["error"] != nil) {
                     // handle error!
@@ -254,7 +293,7 @@ class API {
                     let lastOpenedTimeString = result["lastOpenedChat"]! as! String!
                     
                     var authorNameString = ""
-                    var authorName = result["meet"]!!["lastChatMessage"]!!["authorName"]
+                    let authorName = result["meet"]!!["lastChatMessage"]!!["authorName"]
                     if (authorName! != nil ) {
                         print("authorName: \(authorName)")
                         authorNameString = authorName! as! String!
@@ -289,9 +328,10 @@ class API {
     }
     
     static func getMeetIsNotifications(meetId: String, callback: (Bool) -> Void) {
-        let url = BASE_URL + "meet_is_notif?meetId\(meetId)&accessToken=\(accessToken)"
+        let url = BASE_URL + "meet_is_notif?meetId\(meetId)&accessToken=\(accessToken())"
         Alamofire.request(.GET, url) .responseJSON { response in
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 if (JSON["error"] != nil) {
                     // do nothing??
                 }
@@ -306,10 +346,11 @@ class API {
         Alamofire.request(.POST, url,
             parameters: [
                 "isNotif": isNotif,
-                "accessToken": accessToken
+                "accessToken": accessToken()
             ])
             .responseJSON { response in
                 if let JSON = response.result.value {
+                    if (API.checkAuthError(JSON)) {return}
                     if (JSON["error"] != nil) {
                         print("could not update user notif!")
                     } else {
@@ -325,10 +366,11 @@ class API {
             parameters: [
                 "meetId": meetId,
                 "isNotif": isNotif,
-                "accessToken": accessToken
+                "accessToken": accessToken()
             ])
             .responseJSON { response in
                 if let JSON = response.result.value {
+                    if (API.checkAuthError(JSON)) {return}
                     if (JSON["error"] != nil) {
                         print("could not update meet notif!")
                     } else {
@@ -338,14 +380,39 @@ class API {
         }
     }
     
+    static func getAttendeeInfo(userId: String, callback: (Peep) -> Void) {
+        let url = "https://one-mile.herokuapp.com/attendee_info?accessToken=\(accessToken())&userId=\(userId)"
+        print("getAttendeeInfo(): \(url)")
+        Alamofire.request(.GET, url) .responseJSON { response in
+            print("got response! - fetchUserInfo()")
+            if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
+                if (JSON["error"]! != nil) {
+                    // handle it...
+                    print("error in getAttendeeInfo: \(JSON["error"]! as! String!)")
+                }
+                
+                let name = JSON["name"]! as! String!
+                let desc = JSON["description"]! as! String!
+                let pictureUrl = JSON["pictureUrl"]! as! String!
+                
+                let user = Peep()
+                user.name = name
+                user.description = desc
+                user.pictureUrl = pictureUrl
+                callback(user)
+            }
+        }
+    }
     
     static func getUserInfo(callback: (Peep) -> Void) {
-        let url = "https://one-mile.herokuapp.com/user_info?accessToken=\(accessToken)"
+        let url = "https://one-mile.herokuapp.com/user_info?accessToken=\(accessToken())"
         print("getUSerInfo(): \(url)")
         Alamofire.request(.GET, url) .responseJSON { response in
             print("got response! - fetchUserInfo()")
             if let JSON = response.result.value {
-                if (JSON["error"] != nil) {
+                if (API.checkAuthError(JSON)) {return}
+                if (JSON["error"]! != nil) {
                     // handle it...
                 }
                 
@@ -368,10 +435,11 @@ class API {
         Alamofire.request(.POST, url,
             parameters: [
                 "description": desc,
-                "accessToken": accessToken
+                "accessToken": accessToken()
             ])
             .responseJSON { response in
                 if let JSON = response.result.value {
+                    if (API.checkAuthError(JSON)) {return}
                     if (JSON["error"]! != nil)  {
                         print("could not update user desc")
                     } else {
@@ -387,7 +455,7 @@ class API {
         let url = "https://one-mile.herokuapp.com/create_meet"
         Alamofire.request(.POST, url,
             parameters: [
-                "accessToken": accessToken,
+                "accessToken": accessToken(),
                 "title": title,
                 "description": desc,
                 "maxAttendees": maxAttendees,
@@ -404,7 +472,7 @@ class API {
                 print("handling the returned thing from Request");
                 
                 if let JSON = response.result.value {
-                    
+                    if (API.checkAuthError(JSON)) {return}
                     if (JSON["error"]! != nil) {
                         fail(JSON["error"]! as! String!)
                     } else {
@@ -420,7 +488,7 @@ class API {
         Alamofire.request(.POST, url,
             parameters: [
                 "message": message,
-                "accessToken": accessToken,
+                "accessToken": accessToken(),
                 "meetId": meetId
             ])
             .responseJSON { response in
@@ -429,10 +497,11 @@ class API {
     }
     
     static func fetchAndSetUserId() {
-        let url = BASE_URL + "user_id?accessToken=\(accessToken)"
+        let url = BASE_URL + "user_id?accessToken=\(accessToken())"
         print("fetchAndsetUserId: \(url)")
         Alamofire.request(.GET, url) .responseJSON { response in
             if let JSON = response.result.value {
+                if (API.checkAuthError(JSON)) {return}
                 let userId = JSON["userId"]! as! String!
                 print("user id fetched and set: \(userId)")
                 Util.CURRENT_USER_ID = userId
