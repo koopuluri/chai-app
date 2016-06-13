@@ -78,8 +78,10 @@ class MeetsViewController: UITableViewController, CLLocationManagerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tableView.tableFooterView = UIView()
         // making it so that the first row isn't behind the navbar:
         tableView.contentInset = UIEdgeInsetsMake(44,0,0,0);
+        tableView.separatorStyle = .None
         
         // navigation bar coloring:
         self.navigationController!.navigationBar.barTintColor = UIColor.whiteColor()

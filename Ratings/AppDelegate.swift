@@ -44,9 +44,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(application: UIApplication,didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData){
         //send this device token to server
+        print("deviceTokenDirect: \(deviceToken)")
         Util.DEVICE_TOKEN = Util.getDeviceTokenString(deviceToken)
         
         print("SET DEVICE TOKEN!! \(Util.DEVICE_TOKEN)")
+    }
+    
+    func application(application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: NSError) {
+        print("Failed to register for notifs:", error)
     }
     
     func application(application: UIApplication,

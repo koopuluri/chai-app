@@ -50,7 +50,7 @@ class ChatsViewController: UITableViewController {
         // styling navigation item:
         self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
         self.navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
-        
+        tableView.tableFooterView = UIView()
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
     }
     
