@@ -16,6 +16,8 @@ class MainController: UIPageViewController {
     var currentPageIndex = 1
     var previousPageIndex = -1
     
+    var startIndex = 1
+    
     let meetsController = UIStoryboard(name: "Main", bundle: nil) .
         instantiateViewControllerWithIdentifier("MeetsController")
     
@@ -50,7 +52,18 @@ class MainController: UIPageViewController {
         dataSource = self
         delegate = self
         
-        setViewControllers([meetsController],
+        print("MainController.viewDidLoad().startIndex: \(startIndex)")
+        
+        var startController: UIViewController?
+        if (startIndex == 0) {
+            startController = settingsController
+        } else if (startIndex == 1) {
+            startController = meetsController
+        } else {
+            startController = chatsController
+        }
+        
+        setViewControllers([startController!],
                            direction: .Forward,
                            animated: true,
                            completion: nil)
@@ -60,7 +73,7 @@ class MainController: UIPageViewController {
     }
     
     func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {
-        return 1
+        return startIndex
     }
 
     private(set) lazy var orderedViewControllers: [UIViewController] = {

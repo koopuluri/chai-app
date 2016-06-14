@@ -32,6 +32,9 @@ class Util {
         return tokenString
     }
     
+    static func resetNotificationBadgeCount() {
+        UIApplication.sharedApplication().applicationIconBadgeNumber = 0
+    }
     
     // getting the day for display in format: mm/33/yyyy if date before today, else, "today" / "tomorrow" for future dates.
     static func getDay(date: NSDate) -> String {

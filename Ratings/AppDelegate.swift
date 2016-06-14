@@ -23,6 +23,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let signupController = storyboard.instantiateViewControllerWithIdentifier("SignupController")
         rootViewController.presentViewController(signupController, animated: true, completion: nil)
     }
+    
+    // if the root controller is the MainController, then transitioning to chatsView is possible and will be executed.
+    // otherwise does nothing. (This is the case that SignupNavController is the root --> user is not logged in!
+    func transitionToChatsIfPossible() {
+        let rootNavController = window?.rootViewController as! UINavigationController
+        var mainController: MainController?
+        if (FBSDKAccessToken.currentAccessToken() != nil) {
+            
+            // the user is logged in, moving to the MainNavController, if not currently there:
+            if (rootNavController.restorationIdentifier == "MainNavController") {
+                print("rootNavController is MainNAvController!")
+                mainController = rootNavController.viewControllers.first as! MainController
+                mainController?.programmaticallyMoveToPage(2, direction: UIPageViewControllerNavigationDirection.Forward)
+            } else {
+                print("rootNavController is NOT MainNavController, so moving to MainNavController")
+                // moving over to MainNavController:
+                let mainStoryboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
+                let mainNavController = mainStoryboard.instantiateViewControllerWithIdentifier("MainNavController") as! UINavigationController
+                mainController = mainNavController.viewControllers.first as! MainController
+                mainController!.startIndex = 2
+                window?.rootViewController = mainNavController;
+            }
+            
+        } else {
+            print("user not logged in, staying on the SignupController.")
+        }
+    }
+    
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
@@ -35,11 +63,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let settings = UIUserNotificationSettings(forTypes: [.Alert, .Badge, .Sound], categories: nil)
         application.registerUserNotificationSettings(settings)
         application.registerForRemoteNotifications()
-
+        
+        // if launched from notification:
+        if let notification = launchOptions?[UIApplicationLaunchOptionsRemoteNotificationKey] as? [String: AnyObject] {
+            let meetId = notification["meetId"] as! String!
+            print("opened via notif: \(meetId)")
+            
+            // now transitioning to the ChatsView:
+            transitionToChatsIfPossible()
+        }
         
         // Override point for customization after application launch.
         return FBSDKApplicationDelegate.sharedInstance().application(application, didFinishLaunchingWithOptions: launchOptions)
     
+    }
+    
+    func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
+        let info = userInfo as! [String: AnyObject]
+        
+        var meetId = ""
+        if (userInfo["meetId"] != nil) {
+            meetId = info["meetId"] as! String
+        }
+        
+        if (meetId != "") {
+            // segue to that meet's chat!
+        }
+        
+        transitionToChatsIfPossible()
+        completionHandler(.NewData)
     }
     
     func application(application: UIApplication,didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData){

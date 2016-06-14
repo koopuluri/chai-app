@@ -19,22 +19,38 @@ class SignupController: UIViewController, FBSDKLoginButtonDelegate {
         
     }
     
+    func gotoMain() {
+        let mainStoryboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = mainStoryboard.instantiateViewControllerWithIdentifier("MainNavController") as! UINavigationController
+        UIApplication.sharedApplication().keyWindow?.rootViewController = viewController;
+    }
+    
     override func viewDidAppear(animated: Bool) {
         if (FBSDKAccessToken.currentAccessToken() != nil) {
             print("already logged in. Going to MainController \(FBSDKAccessToken.currentAccessToken().tokenString)")
             gotoMain()
-            
         } else {
             self.loginButton.readPermissions = ["public_profile", "email"]
             self.loginButton.delegate = self
         }
     }
     
-    func gotoMain() {
-        let mainNavController = storyboard?.instantiateViewControllerWithIdentifier("MainNavController")
-        API.fetchAndSetUserId()
-        self.presentViewController(mainNavController!, animated: true, completion: nil)
-    }
+    
+//    func gotoMain() {
+//        
+//        API.fetchAndSetUserId()
+//        
+//        // replace this with the MainController:
+//        let mainController = storyboard?.instantiateViewControllerWithIdentifier("MainController")
+//        
+//        // get the navigation stack:
+//        var controllerStack = navigationController?.viewControllers
+//        controllerStack?.removeAll(keepCapacity: true)
+//        controllerStack?.append(mainController!)
+//        
+//        // now reset the controller stack to have the mainController as the first viewController:
+//        navigationController?.setViewControllers(controllerStack!, animated: true)
+//    }
     
     // Facebook Delegate Methods
     

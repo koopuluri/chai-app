@@ -238,6 +238,9 @@ class PoopForm: UITableViewController, CLLocationManagerDelegate, UITextFieldDel
         self.navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
         self.navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
         
+        // no lines b/w the cells:
+        self.tableView.separatorStyle = UITableViewCellSeparatorStyle.None
+        
         // disabling and styling the submit button:
         submitButton.enabled = false
         submitButton.setTitle("Submit", forState: UIControlState.Normal)

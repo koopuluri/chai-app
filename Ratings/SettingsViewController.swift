@@ -29,22 +29,46 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
     
     var viewMode = true
     
+    func goToSignup() {
+        let mainStoryboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = mainStoryboard.instantiateViewControllerWithIdentifier("SignupNavController") as! UINavigationController
+        UIApplication.sharedApplication().keyWindow?.rootViewController = viewController;
+    }
+    
+    
+//    func goToSignup() {
+//        
+//        // signupController: 
+//        let signupController = storyboard?.instantiateViewControllerWithIdentifier("SignupController")
+//        
+//        // get the navigation stack:
+//        var controllerStack = navigationController?.viewControllers
+//        
+//        // get rid of everything currently on the stack and replace with the signupController as the sole child view controller:
+//        controllerStack?.removeAll(keepCapacity: true)
+//        controllerStack?.append(signupController!)
+//        
+//        // set this:
+//        navigationController?.setViewControllers(controllerStack!, animated: true)
+//
+//    }
+    
     @IBAction func logout(sender: UIButton) {
         FBSDKLoginManager().logOut()
-        
-        // pop this viewController off!
-        let signupController = storyboard?.instantiateViewControllerWithIdentifier("SignupController")
-        self.presentViewController(signupController!, animated: true, completion: nil)
-        //self.parentViewController?.navigationController?.dismissViewControllerAnimated(false, completion: nil)
-        //self.dismissViewControllerAnimated(false, completion: nil)
+        goToSignup()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // styling the navigation bar:
-        self.navigationItem.rightBarButtonItem?.tintColor = Util.getMainColor()
-        self.navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
+        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.whiteColor()
+        self.navigationController?.navigationBar.barTintColor = Util.getMainColor()
+        self.navigationController?.navigationBar.tintColor = UIColor.whiteColor()
+        
+        // title text color as white:
+        let titleDict: NSDictionary = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+        self.navigationController?.navigationBar.titleTextAttributes = titleDict as! [String : AnyObject]
         tableView.tableFooterView = UIView()
         
         // setup:
@@ -108,7 +132,6 @@ class SettingsViewController: UITableViewController, UITextViewDelegate {
     func showEverything() {
         self.userDescLabel.hidden = false
         self.avatarImage.hidden = false
-        self.userDescTextView.hidden = false
         self.editDoneButton.hidden = false
         self.userName.hidden = false
     }

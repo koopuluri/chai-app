@@ -48,9 +48,19 @@ class ChatsViewController: UITableViewController {
         super.viewDidLoad()
         
         // styling navigation item:
-        self.navigationItem.leftBarButtonItem?.tintColor = Util.getMainColor()
-        self.navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.whiteColor()
+        self.navigationController?.navigationBar.barTintColor = Util.getMainColor()
+        self.navigationController?.navigationBar.tintColor = UIColor.whiteColor()
+        
+        // title text color as white:
+        let titleDict: NSDictionary = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+        self.navigationController?.navigationBar.titleTextAttributes = titleDict as! [String : AnyObject]
+        
         tableView.tableFooterView = UIView()
+        
+        // reset the notif count:
+        Util.resetNotificationBadgeCount()
+        
         self.refreshControl?.addTarget(self, action: "handleRefresh:", forControlEvents: UIControlEvents.ValueChanged)
     }
     

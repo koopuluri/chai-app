@@ -165,6 +165,10 @@ class MeetChatPageViewController: UIPageViewController {
             Alamofire.request(.GET, url) .responseJSON { response in
                 if let JSON = response.result.value {
                     // TODO: handle the error case!!
+                    if (JSON["error"]! != nil) {
+                        // exit out:
+                        self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
+                    }
 
                     self.isMember = (JSON["isAttending"]! as! Bool!)
                     self.isHost = (JSON["isHost"]! as! Bool!)

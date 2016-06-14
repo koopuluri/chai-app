@@ -25,7 +25,7 @@
         <!--Meet Chat Page View Controller-->
         <scene sceneID="T2H-hm-c8O">
             <objects>
-                <pageViewController autoresizesArchivedViewToFullSize="NO" transitionStyle="scroll" navigationOrientation="horizontal" spineLocation="none" id="Xqw-qk-f49" customClass="MeetChatPageViewController" customModule="Ratings" customModuleProvider="target" sceneMemberID="viewController">
+                <pageViewController storyboardIdentifier="MeetChatPageViewController" autoresizesArchivedViewToFullSize="NO" transitionStyle="scroll" navigationOrientation="horizontal" spineLocation="none" id="Xqw-qk-f49" customClass="MeetChatPageViewController" customModule="Ratings" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" id="i4m-Fg-2nn">
                         <nil key="title"/>
                         <barButtonItem key="leftBarButtonItem" image="back" id="cE5-Z6-ZGT">
@@ -34,7 +34,7 @@
                             </connections>
                         </barButtonItem>
                         <view key="titleView" contentMode="scaleToFill" id="OOl-Em-veg">
-                            <rect key="frame" x="225" y="6" width="150" height="33"/>
+                            <rect key="frame" x="225" y="5.5" width="150" height="33"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="YiG-vt-De2">
@@ -1003,7 +1003,7 @@
                                                     </constraints>
                                                 </imageView>
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="dOq-1U-xue">
-                                                    <rect key="frame" x="59" y="172" width="20" height="20"/>
+                                                    <rect key="frame" x="289" y="167" width="20" height="20"/>
                                                 </activityIndicatorView>
                                             </subviews>
                                             <constraints>
@@ -1292,7 +1292,7 @@
         <!--Navigation Controller-->
         <scene sceneID="vzC-NF-MhU">
             <objects>
-                <navigationController storyboardIdentifier="MainNavController" navigationBarHidden="YES" id="uPu-ZB-ecj" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="MainNavController" useStoryboardIdentifierAsRestorationIdentifier="YES" navigationBarHidden="YES" id="uPu-ZB-ecj" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="R6U-Vw-Pi9">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -1308,18 +1308,18 @@
         <!--Meets-->
         <scene sceneID="Bpc-pd-NUO">
             <objects>
-                <pageViewController autoresizesArchivedViewToFullSize="NO" transitionStyle="scroll" navigationOrientation="horizontal" spineLocation="none" id="s6g-ki-N2w" customClass="MainController" customModule="Ratings" customModuleProvider="target" sceneMemberID="viewController">
+                <pageViewController storyboardIdentifier="MainController" autoresizesArchivedViewToFullSize="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" transitionStyle="scroll" navigationOrientation="horizontal" spineLocation="none" id="s6g-ki-N2w" customClass="MainController" customModule="Ratings" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" title="Meets" id="Dac-Xy-PyN"/>
                     <simulatedTabBarMetrics key="simulatedBottomBarMetrics"/>
                 </pageViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="47f-xq-eYX" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-228.5" y="1222.5"/>
+            <point key="canvasLocation" x="-273" y="1206"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="QMp-oW-0sS">
             <objects>
-                <navigationController id="af4-oi-Gub" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="SignupNavController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="af4-oi-Gub" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="Plw-5d-ccL">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -1335,7 +1335,7 @@
         <!--Signup Controller-->
         <scene sceneID="pAr-v7-8KJ">
             <objects>
-                <viewController storyboardIdentifier="SignupController" id="i5q-Vs-qVw" customClass="SignupController" customModule="Ratings" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="SignupController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="i5q-Vs-qVw" customClass="SignupController" customModule="Ratings" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Wgs-VM-nes"/>
                         <viewControllerLayoutGuide type="bottom" id="9Ss-CN-lSE"/>
