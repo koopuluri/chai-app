@@ -9,9 +9,9 @@
 
 ## Views:
 
-<img src="/screenshots/MeetsView.png?raw=true" align="left" width="230"></img>
-<img src="/screenshots/MeetJoin.png?raw=true" align="left" width="230"></img>
-<img src="/screenshots/MeetChat.png?raw=true" align="left" width="230"></img>)
+<img src="/screenshots/MeetsView.png?raw=true" width="230"></img>
+<img src="/screenshots/MeetJoin.png?raw=true"  width="230"></img>
+<img src="/screenshots/MeetChat.png?raw=true" width="230"></img>
 
 
 
