@@ -24,6 +24,18 @@
   <img src="/screenshots/MeetChat.png?raw=true" width="300"></img>
 </p>
 
+## Collaborators:
+
+Saathwik Yadavalli (High school student in India) - Design Mockups.
+Faisal Animashaun (CS student at Georgia Tech) - Backend Notifications.
+Karthik Uppuluri
+
+## Moving Forward:
+
+This app is currently in testing. The final release is currently on hold - need to sort out some things with my life before I can continue to work on this. If any one else is interested in taking forward this project, let me know, I'd be happy to provide resources to help you out!
+
+
+
 
 
 
