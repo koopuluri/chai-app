@@ -1,11 +1,20 @@
 # chaiapp (Connecting people by interest and location).
 
-## The major functions in this app:
+## Major functions in this app:
 
 - Login / Signup (uses Facebook login).
 - View “Meets” around you: a meet is an event with a name, description, location, time, host, max number of participants, and members. A user can see meets around them, click on a meet and view its details, and join it if they want to. 
 - Chat with members of a joined meet. Oftentimes it’s intimidating to meet a bunch of strangers without knowing anything about them. A profile system along with the ability to chat with members before actually going were meant to offset potential sketchness. 
-- Host a meet at a location. 
+- Host a meet at a location.
+
+## Views:
+
+![chaiapp meetsView](/screenshots/MeetsView.png?raw=true "Viewing Nearby Meets")
+![chaiapp meetJoin](/screenshots/MeetJoin.png?raw=true "Join Meet")
+![chaiapp meetChat](/screenshots/MeetChat.png?raw=true "Chat with Members of Joined Meet")
+
+
+
 
 
 
