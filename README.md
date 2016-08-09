@@ -9,14 +9,21 @@
 
 ## Views:
 
-<p align="center">View Nearby Meets</p>
+<p align="center">View Nearby Meets.</p>
 <p align="center">
   <img src="/screenshots/MeetsView.png?raw=true" width="300"></img>
 </p>
 
+<p align="center">Join Interesting Meets.</p>
+<p align="center">
+  <img src="/screenshots/MeetJoin.png?raw=true" width="300"></img>
+</p>
 
-<img src="/screenshots/MeetJoin.png?raw=true"  width="300"></img>
-<img src="/screenshots/MeetChat.png?raw=true" width="300"></img>
+<p align="center">Chat with Members of Joined Meets</p>
+<p align="center">
+  <img src="/screenshots/MeetChat.png?raw=true" width="300"></img>
+</p>
+
 
 
 
