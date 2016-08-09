@@ -9,7 +9,7 @@
 
 ## Views:
 
-![chaiapp meetsView](/screenshots/MeetsView.png?raw=true "Viewing Nearby Meets")
+<img src="/screenshots/MeetJoin.png?raw=true" align="left" width="100" >
 ![chaiapp meetJoin](/screenshots/MeetJoin.png?raw=true "Join Meet")
 ![chaiapp meetChat](/screenshots/MeetChat.png?raw=true "Chat with Members of Joined Meet")
 
