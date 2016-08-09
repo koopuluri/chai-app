@@ -9,14 +9,14 @@
 
 ## Views:
 
+<p align="center">View Nearby Meets</p>
 <p align="center">
-  View Nearby Meets
-  <img src="/screenshots/MeetsView.png?raw=true" width="230"></img>
+  <img src="/screenshots/MeetsView.png?raw=true" width="300"></img>
 </p>
 
 
-<img src="/screenshots/MeetJoin.png?raw=true"  width="230"></img>
-<img src="/screenshots/MeetChat.png?raw=true" width="230"></img>
+<img src="/screenshots/MeetJoin.png?raw=true"  width="300"></img>
+<img src="/screenshots/MeetChat.png?raw=true" width="300"></img>
 
 
 
