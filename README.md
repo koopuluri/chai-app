@@ -26,9 +26,9 @@
 
 ## Collaborators:
 
-Saathwik Yadavalli (High school student in India) - Design Mockups.
-Faisal Animashaun (CS student at Georgia Tech) - Backend Notifications.
-Karthik Uppuluri
+<p align="center">Saathwik Yadavalli (High school student in India) - Design Mockups.</p>
+<p align="center">Faisal Animashaun (CS student at Georgia Tech) - Backend Notifications.</p>
+<p align="center">Karthik Uppuluri</p>
 
 ## Moving Forward:
 
